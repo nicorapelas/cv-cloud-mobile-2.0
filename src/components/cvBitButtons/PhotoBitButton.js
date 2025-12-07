@@ -70,20 +70,29 @@ const PhotoBitButton = () => {
   }, [lastUpdate, fetchPhotoStatus, photoAssignLoading, loading])
 
   const autoAssignPhoto = () => {
-    if (!photos || photos.length < 1) {
+    if (!photos || !Array.isArray(photos) || photos.length < 1) {
       return null
     }
     if (photos.length === 1) {
-      assignPhoto(photos[0]._id)
+      if (photos[0] && photos[0]._id) {
+        assignPhoto(photos[0]._id)
+      }
       return
     }
     const previousAssignedPhoto = photos.filter((photo) => {
-      return photo.assigned === true
+      return photo && photo.assigned === true && photo._id
     })
     if (previousAssignedPhoto.length < 1) {
-      return null
+      // If no photo is assigned, auto-assign the first photo
+      const firstPhoto = photos.find((photo) => photo && photo._id)
+      if (firstPhoto && firstPhoto._id) {
+        assignPhoto(firstPhoto._id)
+      }
+      return
     } else {
-      assignPhoto(previousAssignedPhoto[0]._id)
+      if (previousAssignedPhoto[0] && previousAssignedPhoto[0]._id) {
+        assignPhoto(previousAssignedPhoto[0]._id)
+      }
     }
   }
 

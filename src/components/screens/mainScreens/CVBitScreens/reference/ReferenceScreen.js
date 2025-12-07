@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: '5%',
+    paddingBottom: 60,
   },
   contentBed: {
     backgroundColor: '#ffff',

@@ -25,6 +25,8 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
   const [attribute, setAttribute] = useState('')
   const [interest, setInterest] = useState('')
   const [personalSummary, setPersonalSummary] = useState('')
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { attributeToEdit },
@@ -50,6 +52,34 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
   const { setCVBitScreenSelected } = useContext(NavContext)
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && scrollViewRef.current) {
+      const shouldScroll = 
+        (incomingBit === 'personalSummary' && personalSummary) ||
+        (incomingBit === 'attribute' && attribute) ||
+        (incomingBit === 'interest' && interest)
+      
+      if (shouldScroll) {
+        setTimeout(() => {
+          if (scrollViewRef.current) {
+            scrollViewRef.current.scrollToEnd({ animated: true })
+          }
+        }, 300)
+      }
+    }
+  }, [keyboard.keyboardShown, incomingBit, personalSummary, attribute, interest])
+
+  // Flash scroll indicators on iOS when form loads
+  useEffect(() => {
+    if (incomingBit && Platform.OS === 'ios' && scrollViewRef.current) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.flashScrollIndicators()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [incomingBit])
 
   useEffect(() => {
     if (bit) setIncomingBit(bit)
@@ -123,6 +153,7 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
           <>
             <Text style={styles.inputHeading}>Attribute</Text>
             <TextInput
+              ref={inputRef}
               style={styles.input}
               maxLength={25}
               textAlign="center"
@@ -131,9 +162,16 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setAttribute}
               onFocus={() => {
                 tipSelectReset()
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
               }}
               autoFocus={true}
               autoCorrect={true}
+              editable={true}
             />
             <Text style={styles.maxCharactersNote}>
               max 25 characters ({!attribute ? '0' : attribute.length}
@@ -164,6 +202,7 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
           <>
             <Text style={styles.inputHeading}>Interenst</Text>
             <TextInput
+              ref={inputRef}
               style={styles.input}
               maxLength={25}
               textAlign="center"
@@ -172,9 +211,16 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setInterest}
               onFocus={() => {
                 tipSelectReset()
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
               }}
               autoFocus={true}
               autoCorrect={true}
+              editable={true}
             />
             <Text style={styles.maxCharactersNote}>
               max 25 characters ({!interest ? '0' : interest.length}
@@ -205,6 +251,7 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
           <>
             <Text style={styles.inputHeading}>Personal summary</Text>
             <TextInput
+              ref={inputRef}
               style={styles.inputTextArea}
               maxLength={330}
               multiline={true}
@@ -214,9 +261,18 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setPersonalSummary}
               autoCorrect={true}
               autoFocus={true}
+              onFocus={() => {
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
+              }}
+              editable={true}
             />
             <Text style={styles.maxCharactersNote}>
-              max 330 characters ({!interest ? '0' : interest.length}
+              max 330 characters ({!personalSummary ? '0' : personalSummary.length}
               /330)
             </Text>
             <View style={styles.buttonContainer}>
@@ -260,11 +316,19 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
           ? styles.bedIos
           : styles.bedAndroid
       }
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-        keyboardShouldPersistTaps="always"
+        ref={scrollViewRef}
+        contentContainerStyle={
+          keyboard.keyboardShown
+            ? styles.scrollContent
+            : styles.scrollContentCentered
+        }
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={incomingBit === 'personalSummary'}
+        persistentScrollbar={Platform.OS === 'android' && incomingBit === 'personalSummary'}
       >
         {renderForm()}
       </ScrollView>
@@ -284,10 +348,18 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 150,
+    paddingTop: 80,
+  },
   formBed: {
     flexDirection: 'column',
-    paddingTop: 30,
-    paddingBottom: 10,
   },
   inputHeading: {
     color: '#ffff',

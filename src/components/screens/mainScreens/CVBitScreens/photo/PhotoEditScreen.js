@@ -1,14 +1,17 @@
 import React, { useContext, useEffect, useState } from 'react'
 import {
   View,
+  KeyboardAvoidingView,
   ScrollView,
   Text,
   TextInput,
   StyleSheet,
   Image,
   TouchableOpacity,
+  Platform,
 } from 'react-native'
 import { MaterialIcons } from '@expo/vector-icons'
+import { useKeyboard } from '@react-native-community/hooks'
 
 import LoaderFullScreen from '../../../../common/LoaderFullScreen'
 import FormCancelButton from '../../../../common/FormCancelButton'
@@ -19,6 +22,8 @@ const PhotoEditScreen = () => {
   const [id, setId] = useState()
   const [title, setTitle] = useState()
   const [photoUrl, setPhotoUrl] = useState()
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, photoToEdit },
@@ -26,6 +31,8 @@ const PhotoEditScreen = () => {
   } = useContext(PhotoContext)
 
   const { setCVBitScreenSelected } = useContext(NavContext)
+
+  const keyboard = useKeyboard()
 
   useEffect(() => {
     if (photoToEdit) {
@@ -35,6 +42,17 @@ const PhotoEditScreen = () => {
       setPhotoUrl(photoUrl)
     }
   }, [photoToEdit])
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && photoUrl && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, photoUrl])
 
   //   {
   //     editPhoto(id, { title: title }, () => {
@@ -54,8 +72,17 @@ const PhotoEditScreen = () => {
     if (loading || loading === null) return <LoaderFullScreen />
     return (
       <View style={styles.bed}>
-        <View>
-          <ScrollView keyboardShouldPersistTaps="always">
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <Image
               style={styles.photo}
               source={{
@@ -63,15 +90,22 @@ const PhotoEditScreen = () => {
               }}
             />
             <TextInput
+              ref={inputRef}
               style={styles.input}
               textAlign="center"
               placeholder="title"
               value={title}
               onChangeText={setTitle}
-              onFocus={() => {
-                setTitle('')
-              }}
               autoCorrect={false}
+              autoCapitalize="words"
+              onFocus={() => {
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
+              }}
             />
             <View style={styles.buttonContainer}>
               <FormCancelButton route="photo" />
@@ -84,7 +118,7 @@ const PhotoEditScreen = () => {
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     )
   }
@@ -102,6 +136,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     width: '100%',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: '#232936',
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   photo: {
     width: 150,

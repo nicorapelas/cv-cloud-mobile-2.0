@@ -28,6 +28,10 @@ const DoneButton = ({ routeName, text }) => {
 
 const styles = StyleSheet.create({
   bed: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#232936',
     justifyContent: 'center',
   },

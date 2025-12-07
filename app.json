@@ -2,15 +2,15 @@
   "expo": {
     "name": "CV Cloud",
     "slug": "cv-cloud-mobile-rebuild",
-    "version": "2.0.1",
+    "version": "2.0.3",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/appIcon-1024.png",
     "userInterfaceStyle": "light",
     "backgroundColor": "#232936",
     "primaryColor": "#3498db",
     "description": "Professional CV builder and manager. Create, customize and share your CV in minutes with multiple modern templates, video introductions, and easy document management.",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/logo-3000.png",
       "resizeMode": "contain",
       "backgroundColor": "#232936"
     },
@@ -30,9 +30,17 @@
     },
     "android": {
       "package": "com.cvcloud.app",
-      "versionCode": 2,
+      "versionCode": 14,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/appIcon-adaptive-padded.png",
+        "backgroundColor": "#232936"
+      },
+      "statusBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "#232936"
+      },
+      "navigationBar": {
+        "barStyle": "light-content",
         "backgroundColor": "#232936"
       },
       "permissions": [

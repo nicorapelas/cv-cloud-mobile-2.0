@@ -25,6 +25,8 @@ const ExperienceCreateForm = () => {
   const [titleInputShow, setTitleInputShow] = useState(true)
   const [descriptionInputShow, setDescriptionInputShow] = useState(false)
   const [saveButtonShow, setSaveButtonShow] = useState(false)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, error },
@@ -42,6 +44,31 @@ const ExperienceCreateForm = () => {
   }, [error])
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (
+      keyboard.keyboardShown &&
+      (titleInputShow || descriptionInputShow) &&
+      scrollViewRef.current
+    ) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, titleInputShow, descriptionInputShow])
+
+  // Flash scroll indicators on iOS when description step loads
+  useEffect(() => {
+    if (descriptionInputShow && Platform.OS === 'ios' && scrollViewRef.current) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.flashScrollIndicators()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [descriptionInputShow])
 
   const errorHeading = () => {
     if (error === null) return null
@@ -70,16 +97,26 @@ const ExperienceCreateForm = () => {
       <View>
         <Text style={styles.inputHeader}>Job title</Text>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           maxLength={25}
           textAlign="center"
           placeholder="job title"
           value={title}
-          onFocus={clearExperienceErrors}
+          onFocus={() => {
+            clearExperienceErrors()
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           onChangeText={setTitle}
           autoCorrect={true}
           autoCapitalize="words"
           autoFocus={!error ? true : false}
+          editable={true}
         />
         {!error || error === null ? (
           <Text style={styles.maxCharactersNote}>
@@ -124,6 +161,7 @@ const ExperienceCreateForm = () => {
       <View>
         <Text style={styles.inputHeader}>Job description</Text>
         <TextInput
+          ref={inputRef}
           style={styles.inputTextArea}
           maxLength={230}
           multiline={true}
@@ -134,6 +172,15 @@ const ExperienceCreateForm = () => {
           autoCorrect={true}
           autoCapitalize="sentences"
           autoFocus={!error ? true : false}
+          onFocus={() => {
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
+          editable={true}
         />
         <Text style={styles.maxCharactersNote}>
           max 230 characters ({!description ? '0' : description.length}
@@ -262,12 +309,12 @@ const ExperienceCreateForm = () => {
 
   const renderForm = () => {
     return (
-      <>
+      <View style={styles.formBed}>
         {titleInput()}
         {descriptionInput()}
         {saveButton()}
         {saveButtonShow ? null : <FormHintModal bit="experience" />}
-      </>
+      </View>
     )
   }
 
@@ -280,12 +327,20 @@ const ExperienceCreateForm = () => {
             ? styles.bedIos
             : styles.bedAndroid
         }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {errorHeading()}
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-          keyboardShouldPersistTaps="always"
+          ref={scrollViewRef}
+          contentContainerStyle={
+            keyboard.keyboardShown
+              ? styles.scrollContent
+              : styles.scrollContentCentered
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={descriptionInputShow}
+          persistentScrollbar={Platform.OS === 'android' && descriptionInputShow}
         >
           {renderPreview()}
           {renderForm()}
@@ -309,10 +364,18 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 150,
+    paddingTop: 80,
+  },
   formBed: {
     flexDirection: 'column',
-    paddingTop: 30,
-    paddingBottom: 10,
   },
   inputHeader: {
     color: '#ffff',

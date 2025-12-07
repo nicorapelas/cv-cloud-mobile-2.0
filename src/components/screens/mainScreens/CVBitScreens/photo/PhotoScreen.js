@@ -24,6 +24,7 @@ const PhotoScreen = () => {
   const [documentId, setDocumentId] = useState('')
   const [documentSelected, setDocumentSelected] = useState('')
   const [photoPublicId, setPhotoPublicId] = useState(null)
+  const autoAssignAttempted = useRef(false)
 
   const { showDeleteModal } = useContext(UniversalContext)
 
@@ -43,11 +44,21 @@ const PhotoScreen = () => {
   useEffect(() => {
     if (photos && photos.length > 0) {
       const photoAssigned = photos.filter(ph => {
-        return ph.assigned === true
+        return ph && ph.assigned === true && ph._id
       })
-      setAssignedPhotoId(photoAssigned[0]._id)
+      if (photoAssigned.length > 0 && photoAssigned[0] && photoAssigned[0]._id) {
+        setAssignedPhotoId(photoAssigned[0]._id)
+        autoAssignAttempted.current = false // Reset if we find an assigned photo
+      } else if (!autoAssignAttempted.current && !photoAssignLoading) {
+        // If no photo is assigned and we haven't attempted yet, auto-assign the first photo
+        const firstPhoto = photos.find(ph => ph && ph._id)
+        if (firstPhoto && firstPhoto._id) {
+          autoAssignAttempted.current = true
+          assignPhoto(firstPhoto._id)
+        }
+      }
     }
-  }, [photos])
+  }, [photos, photoAssignLoading])
 
   // Handle real-time updates
   useEffect(() => {
@@ -73,20 +84,26 @@ const PhotoScreen = () => {
   }, [lastUpdate, fetchPhotos, photoAssignLoading, loading])
 
   const handlePressUsePhoto = (data) => {
-    setPhotoSelected(data._id)
-    assignPhoto(data._id)
+    if (data && data._id) {
+      setPhotoSelected(data._id)
+      assignPhoto(data._id)
+    }
   }
 
   const handlePressEdit = (data) => {
-    setPhotoToEdit(data)
-    setCVBitScreenSelected('photoEdit')
+    if (data) {
+      setPhotoToEdit(data)
+      setCVBitScreenSelected('photoEdit')
+    }
   }
 
   const handlePressDelete = (data) => {
-    setDocumentId(data._id)
-    setDocumentSelected(data.title)
-    setPhotoPublicId(data.publicId)
-    showDeleteModal()
+    if (data && data._id) {
+      setDocumentId(data._id)
+      setDocumentSelected(data.title || '')
+      setPhotoPublicId(data.publicId || null)
+      showDeleteModal()
+    }
   }
 
   const renderList = () => {
@@ -103,7 +120,7 @@ const PhotoScreen = () => {
       <>
         <AddContentButtonLink routeName="photoCreate" text="upload photo" />
         <FlatList
-          keyExtractor={(photo) => photo._id}
+          keyExtractor={(photo) => photo && photo._id ? photo._id : Math.random().toString()}
           data={photos}
           renderItem={({ item }) => {
             return (
@@ -207,6 +224,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     width: '100%',
+    paddingBottom: 60,
   },
   container: {
     backgroundColor: '#2e3647',

@@ -14,7 +14,7 @@ import * as DocumentPicker from 'expo-document-picker'
 import { MaterialIcons, AntDesign } from '@expo/vector-icons'
 import { useKeyboard } from '@react-native-community/hooks'
 
-import { keys } from '../../../../../../config/keys_dev'
+import keys from '../../../../../../config/keys'
 import LoaderFullScreen from '../../../../common/LoaderFullScreen'
 import LoaderWithText from '../../../../common/LoaderWithText'
 import FormCancelButton from '../../../../common/FormCancelButton'
@@ -143,27 +143,27 @@ const CertificatePdfUploadScreen = () => {
       )
     return (
       <View style={styles.textInputBed}>
-          <MaterialIcons name="picture-as-pdf" style={styles.fileSelectedIcon} />
-          <Text style={styles.fileSelected}>{pdfUrl.name}</Text>
-          <TextInput
-            style={styles.input}
-            textAlign="center"
-            placeholder="document title"
-            value={title}
-            onChangeText={setTitle}
-            autoCorrect={false}
-            autoFocus={true}
-          />
-          <View style={styles.buttonContainer}>
+        <MaterialIcons name="picture-as-pdf" style={styles.fileSelectedIcon} />
+        <Text style={styles.fileSelected}>{pdfUrl.name}</Text>
+        <TextInput
+          style={styles.input}
+          textAlign="center"
+          placeholder="document title"
+          value={title}
+          onChangeText={setTitle}
+          autoCorrect={false}
+          autoFocus={true}
+        />
+        <View style={styles.buttonContainer}>
           <FormCancelButton route="certificate" />
-            <TouchableOpacity
-              style={styles.addButtonContainer}
-              onPress={() => createUploadSignature()}
-            >
-              <MaterialIcons style={styles.addButtonIcon} name="add-circle" />
-              <Text style={styles.addButtonText}>save</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.addButtonContainer}
+            onPress={() => createUploadSignature()}
+          >
+            <MaterialIcons style={styles.addButtonIcon} name="add-circle" />
+            <Text style={styles.addButtonText}>save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     )
   }
@@ -172,16 +172,16 @@ const CertificatePdfUploadScreen = () => {
     if (loading) return <LoaderFullScreen />
     return (
       <KeyboardAvoidingView
-      style={
-        Platform.OS === 'ios' && keyboard.keyboardShown === false
-          ? styles.bedIos
-          : styles.bedAndroid
-      }
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      {titleField()}
+        style={
+          Platform.OS === 'ios' && keyboard.keyboardShown === false
+            ? styles.bedIos
+            : styles.bedAndroid
+        }
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        {titleField()}
       </KeyboardAvoidingView>
-  )
+    )
   }
 
   return (
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   textInputBed: {
-    paddingTop: '10%'
+    paddingTop: '10%',
   },
   input: {
     backgroundColor: '#ffffff',

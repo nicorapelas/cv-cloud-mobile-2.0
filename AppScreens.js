@@ -58,8 +58,16 @@ const AppScreens = () => {
     }
   }, [user])
 
+  // Sync currentScreen with screenSelected on mount
   useEffect(() => {
-    if (screenSelected !== currentScreen) {
+    if (currentScreen !== screenSelected && !nextScreen) {
+      setCurrentScreen(screenSelected)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (screenSelected !== currentScreen && screenSelected) {
+      // Always animate the transition for better UX
       setSlideDirection(determineSlideDirection(screenSelected))
       setNextScreen(screenSelected)
       Animated.timing(animatedValue, {
@@ -72,7 +80,7 @@ const AppScreens = () => {
         animatedValue.setValue(0)
       })
     }
-  }, [screenSelected])
+  }, [screenSelected, currentScreen])
 
   const determineSlideDirection = (nextScreen) => {
     const screenOrder = [
@@ -150,19 +158,27 @@ const AppScreens = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[styles.screenContainer, currentScreenStyle]}
-        pointerEvents="box-none"
-      >
-        {memoizedCurrentScreen}
-      </Animated.View>
-      {nextScreen && (
+      {memoizedCurrentScreen && (
+        <Animated.View
+          style={[styles.screenContainer, currentScreenStyle]}
+          pointerEvents="box-none"
+        >
+          {memoizedCurrentScreen}
+        </Animated.View>
+      )}
+      {nextScreen && memoizedNextScreen && (
         <Animated.View
           style={[styles.screenContainer, nextScreenStyle]}
           pointerEvents="box-none"
         >
           {memoizedNextScreen}
         </Animated.View>
+      )}
+      {/* Fallback: render directly from screenSelected if nothing is rendered */}
+      {!memoizedCurrentScreen && !memoizedNextScreen && (
+        <View style={styles.screenContainer}>
+          {screenSelector(screenSelected)}
+        </View>
       )}
     </View>
   )

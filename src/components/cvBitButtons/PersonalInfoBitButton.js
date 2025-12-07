@@ -60,16 +60,16 @@ const PersonalInfoBitButton = () => {
         <Text style={styles.percentage}>
           {personalInfoStatus < 100 ? personalInfoStatus : '100'} %
         </Text>
-        {personalInfoStatus === null || personalInfoStatus < 1 ? (
+        {personalInfoStatus === null || personalInfoStatus === 0 || personalInfoStatus < 1 ? (
           <Octicons style={styles.redDot} name="dot-fill" />
         ) : null}
-        {personalInfoStatus > 1 && personalInfoStatus < 35 ? (
+        {personalInfoStatus >= 1 && personalInfoStatus < 35 ? (
           <Octicons style={styles.orangeDot} name="dot-fill" />
         ) : null}
-        {personalInfoStatus > 49 && personalInfoStatus < 68 ? (
+        {personalInfoStatus >= 35 && personalInfoStatus < 68 ? (
           <Octicons style={styles.yellowDot} name="dot-fill" />
         ) : null}
-        {personalInfoStatus > 68 ? (
+        {personalInfoStatus >= 68 ? (
           <Octicons style={styles.greenDot} name="dot-fill" />
         ) : null}
       </View>

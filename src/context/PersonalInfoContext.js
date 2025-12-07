@@ -109,7 +109,9 @@ const fetchViewHeadingSample = (dispatch) => async () => {
 const createPersonalInfo = (dispatch) => async (formValues) => {
   dispatch({ type: 'LOADING' })
   try {
+    console.log('PersonalInfoContext: Sending to server:', formValues)
     const response = await ngrokApi.post('/api/personal-info', formValues)
+    console.log('PersonalInfoContext: Server response:', response.data)
     if (response.data.error) {
       dispatch({ type: 'ADD_ERROR', payload: response.data.error })
       return
@@ -117,6 +119,7 @@ const createPersonalInfo = (dispatch) => async (formValues) => {
     dispatch({ type: 'CREATE', payload: response.data })
     return
   } catch (error) {
+    console.log('PersonalInfoContext: Error:', error)
     await ngrokApi.post('/error', { error: error })
     return
   }

@@ -82,7 +82,9 @@ const EmployHistoryScreen = () => {
                     </View>
                   )}
                   {!item.description || item.description.length < 1 ? null : (
-                    <View style={styles.contentRow}>
+                    <View
+                      style={[styles.contentRow, styles.contentRowDescription]}
+                    >
                       <MaterialIcons style={styles.icon} name="description" />
                       <Text style={styles.text}>{item.description}</Text>
                     </View>
@@ -158,6 +160,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: '3%',
+    paddingBottom: 60,
   },
   contentBed: {
     backgroundColor: '#ffff',
@@ -168,6 +171,9 @@ const styles = StyleSheet.create({
   contentRow: {
     flexDirection: 'row',
     paddingTop: 5,
+  },
+  contentRowDescription: {
+    paddingRight: 15,
   },
   icon: {
     width: 20,

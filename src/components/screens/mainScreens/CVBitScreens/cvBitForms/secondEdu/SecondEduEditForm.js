@@ -32,6 +32,8 @@ const SecondEduEditForm = () => {
   const [schoolName, setSchoolName] = useState(null)
   const [subject, setSubject] = useState(null)
   const [subjectsArray, setSubjectsArray] = useState([])
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
   const [additionalInfo, setAdditionalInfo] = useState()
   const [schoolNameInputShow, setSchoolNameInputShow] = useState(true)
   const [datesInputShow, setDatesInputShow] = useState(false)
@@ -74,6 +76,17 @@ const SecondEduEditForm = () => {
   }, [secondEduToEdit])
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && (subject !== null || schoolName !== null || additionalInfo !== null) && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, subject, schoolName, additionalInfo])
 
   const errorHeading = () => {
     if (error === null) return null
@@ -188,12 +201,21 @@ const SecondEduEditForm = () => {
       <View>
         <Text style={styles.inputHeader}>School Name</Text>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           maxLength={30}
           textAlign="center"
           placeholder="school name"
           value={schoolName}
-          onFocus={clearSecondEduErrors}
+          onFocus={() => {
+            clearSecondEduErrors()
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoFocus={!error ? true : false}
           onChangeText={setSchoolName}
           autoCorrect={false}
@@ -280,6 +302,7 @@ const SecondEduEditForm = () => {
       <View>
         {renderSubjectsArray()}
         <TextInput
+          ref={inputRef}
           style={styles.input}
           maxLength={25}
           onSubmitEditing={() => {
@@ -292,6 +315,14 @@ const SecondEduEditForm = () => {
           placeholder="subject"
           value={subject}
           onChangeText={setSubject}
+          onFocus={() => {
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoCorrect={true}
           autoCapitalize="words"
           autoFocus={!error ? true : false}
@@ -398,6 +429,7 @@ const SecondEduEditForm = () => {
       <View>
         <Text style={styles.inputHeader}>Additional information</Text>
         <TextInput
+          ref={inputRef}
           style={styles.inputTextArea}
           maxLength={180}
           multiline={true}
@@ -405,6 +437,14 @@ const SecondEduEditForm = () => {
           placeholder="additional information"
           value={additionalInfo}
           onChangeText={setAdditionalInfo}
+          onFocus={() => {
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           autoFocus={!error ? true : false}
@@ -580,13 +620,16 @@ const SecondEduEditForm = () => {
             ? styles.bedIos
             : styles.bedAndroid
         }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {errorHeading()}
         {!yearPickerShow ? (
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-            keyboardShouldPersistTaps="always"
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {renderPreview()}
             {renderForm()}
@@ -612,6 +655,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   formBed: {
     flexDirection: 'column',

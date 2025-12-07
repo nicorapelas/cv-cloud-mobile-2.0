@@ -27,6 +27,10 @@ import { getCountryConfig } from '../../../../../../utils/countryConfig'
 const ContactInfoCreateForm = () => {
   const [email, setEmail] = useState(null)
   const [phone, setPhone] = useState(null)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
+  const shouldScrollToTopRef = React.useRef(false)
+  const prevAddressInputShowRef = React.useRef(false)
   const [unit, setUnit] = useState(null)
   const [complex, setComplex] = useState(null)
   const [address, setAddress] = useState(null)
@@ -66,6 +70,82 @@ const ContactInfoCreateForm = () => {
   }, [])
 
   const keyboard = useKeyboard()
+
+  // Detect when we arrive at address step and scroll to top
+  useEffect(() => {
+    if (addressInputShow && !prevAddressInputShowRef.current) {
+      // We just arrived at address step
+      prevAddressInputShowRef.current = true
+      shouldScrollToTopRef.current = true
+
+      // Scroll to top immediately and repeatedly to override any other scrolls
+      const scrollToTop = () => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: false })
+        }
+      }
+
+      // Immediate scroll
+      scrollToTop()
+
+      // On iOS, use longer delays to ensure scroll-to-top overrides keyboard scroll
+      const delays =
+        Platform.OS === 'ios'
+          ? [50, 150, 300, 500, 700, 900, 1100]
+          : [50, 150, 300, 500]
+
+      // Additional scrolls at different intervals to ensure it sticks
+      const timeouts = delays.map((delay) => setTimeout(scrollToTop, delay))
+
+      // Keep shouldScrollToTopRef true longer on iOS to prevent keyboard scroll override
+      timeouts.push(
+        setTimeout(
+          () => {
+            shouldScrollToTopRef.current = false
+          },
+          Platform.OS === 'ios' ? 1200 : 800
+        )
+      )
+
+      return () => {
+        timeouts.forEach(clearTimeout)
+      }
+    } else if (!addressInputShow) {
+      prevAddressInputShowRef.current = false
+      shouldScrollToTopRef.current = false
+    }
+  }, [addressInputShow])
+
+  // Scroll to input when keyboard appears (but not when we should scroll to top)
+  useEffect(() => {
+    if (
+      keyboard.keyboardShown &&
+      (emailInputShow || phoneInputShoow || addressInputShow) &&
+      scrollViewRef.current &&
+      !shouldScrollToTopRef.current
+    ) {
+      setTimeout(() => {
+        if (scrollViewRef.current && !shouldScrollToTopRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [
+    keyboard.keyboardShown,
+    emailInputShow,
+    phoneInputShoow,
+    addressInputShow,
+  ])
+
+  // Flash scroll indicators on iOS when Address step loads
+  useEffect(() => {
+    if (addressInputShow && Platform.OS === 'ios' && scrollViewRef.current) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.flashScrollIndicators()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [addressInputShow])
 
   useEffect(() => {
     if (error) toggleHideNavLinks(false)
@@ -158,12 +238,23 @@ const ContactInfoCreateForm = () => {
       <View>
         <Text style={styles.inputHeader}>Email Address</Text>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           textAlign="center"
           placeholder="Enter your email address"
           value={email}
           autoFocus={!error ? true : false}
-          onFocus={() => clearErrors()}
+          onFocus={() => {
+            clearErrors()
+            // Scroll to end when input is focused (but not when we should scroll to top)
+            if (!shouldScrollToTopRef.current) {
+              setTimeout(() => {
+                if (scrollViewRef.current && !shouldScrollToTopRef.current) {
+                  scrollViewRef.current.scrollToEnd({ animated: true })
+                }
+              }, 300)
+            }
+          }}
           onChangeText={setEmail}
           autoCorrect={false}
           autoCapitalize="none"
@@ -332,17 +423,34 @@ const ContactInfoCreateForm = () => {
         {addressField('Complex Name', 'Complex/Building name', 'complex')}
         {addressField('Street Address', 'Enter your street address', 'address')}
         {addressField(
-          userCountry === 'PH' ? 'Barangay' : userCountry === 'NG' ? 'LGA' : 'Suburb',
-          userCountry === 'PH' ? 'Barangay' : userCountry === 'NG' ? 'Local Government Area' : 'Suburb/Neighborhood',
+          userCountry === 'PH'
+            ? 'Barangay'
+            : userCountry === 'NG'
+            ? 'LGA'
+            : 'Suburb',
+          userCountry === 'PH'
+            ? 'Barangay'
+            : userCountry === 'NG'
+            ? 'Local Government Area'
+            : 'Suburb/Neighborhood',
           'suburb'
         )}
         {addressField('City', 'City', 'city')}
         {addressField(
-          userCountry === 'PH' ? 'Region' : userCountry === 'NG' ? 'State' : 'Province/State',
-          userCountry === 'PH' ? 'Region' : userCountry === 'NG' ? 'State' : 'Province or State',
+          userCountry === 'PH'
+            ? 'Region'
+            : userCountry === 'NG'
+            ? 'State'
+            : 'Province/State',
+          userCountry === 'PH'
+            ? 'Region'
+            : userCountry === 'NG'
+            ? 'State'
+            : 'Province or State',
           'province'
         )}
-        {countryConfig.addressFields.country && addressField('Country', 'Country', 'country')}
+        {countryConfig.addressFields.country &&
+          addressField('Country', 'Country', 'country')}
         {addressField(
           userCountry === 'PH' ? 'ZIP Code' : 'Postal Code',
           userCountry === 'PH' ? 'ZIP code' : 'Postal/ZIP code',
@@ -443,13 +551,13 @@ const ContactInfoCreateForm = () => {
 
   const renderForm = () => {
     return (
-      <>
+      <View style={styles.formBed}>
         {renderEmailField()}
         {renderPhoneField()}
         {renderAddressFields()}
         {saveButton()}
         {saveButtonShow ? null : <FormHintModal bit="contactInfo" />}
-      </>
+      </View>
     )
   }
 
@@ -462,15 +570,20 @@ const ContactInfoCreateForm = () => {
             ? styles.bedIos
             : styles.bedAndroid
         }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {errorHeading()}
         <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: 'center',
-          }}
-          keyboardShouldPersistTaps="always"
+          ref={scrollViewRef}
+          contentContainerStyle={
+            keyboard.keyboardShown
+              ? styles.scrollContent
+              : styles.scrollContentCentered
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={addressInputShow}
+          persistentScrollbar={Platform.OS === 'android' && addressInputShow}
         >
           {renderPreview()}
           {renderForm()}
@@ -493,6 +606,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 150,
+    paddingTop: 80,
+  },
+  formBed: {
+    flexDirection: 'column',
   },
   inputHeader: {
     color: '#ffff',

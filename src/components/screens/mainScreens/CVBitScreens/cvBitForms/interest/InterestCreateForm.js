@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Keyboard,
   KeyboardAvoidingView,
+  Platform,
 } from 'react-native'
 import { useKeyboard } from '@react-native-community/hooks'
 import {
@@ -28,6 +29,8 @@ import { Context as NavContext } from '../../../../../../context/NavContext'
 const InterestCreateForm = ({ bit }) => {
   const [interest, setInterest] = useState(null)
   const [interestArray, setInterestArray] = useState([])
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, error, interests },
@@ -51,6 +54,27 @@ const InterestCreateForm = ({ bit }) => {
   }, [tipSelected])
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && interest && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, interest])
+
+  // Flash scroll indicators on iOS when interests are added
+  useEffect(() => {
+    if (interestArray && interestArray.length > 0 && Platform.OS === 'ios' && scrollViewRef.current) {
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.flashScrollIndicators()
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [interestArray.length])
 
   const addInterest = () => {
     if (!interest || !interest.replace(/\s/g, '').length) {
@@ -203,6 +227,7 @@ const InterestCreateForm = ({ bit }) => {
       <View style={styles.formBed}>
         <Text style={styles.inputHeading}>Interest</Text>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           maxLength={25}
           onSubmitEditing={() => {
@@ -218,9 +243,16 @@ const InterestCreateForm = ({ bit }) => {
           onFocus={() => {
             tipSelectReset()
             clearInterestErrors()
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
           }}
           autoCorrect={true}
           autoFocus={!error ? true : false}
+          editable={true}
         />
         {!error ? (
           <Text style={styles.maxCharactersNote}>
@@ -242,16 +274,24 @@ const InterestCreateForm = ({ bit }) => {
   return (
     <KeyboardAvoidingView
       style={
-        userPlanformOS === 'ios' && keyboard.keyboardShown === false
+        Platform.OS === 'ios' && keyboard.keyboardShown === false
           ? styles.bedIos
           : styles.bedAndroid
       }
-      behavior={userPlanformOS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {errorHeading()}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-        keyboardShouldPersistTaps="always"
+        ref={scrollViewRef}
+        contentContainerStyle={
+          keyboard.keyboardShown
+            ? styles.scrollContent
+            : styles.scrollContentCentered
+        }
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={interestArray && interestArray.length > 2}
+        persistentScrollbar={Platform.OS === 'android' && interestArray && interestArray.length > 2}
       >
         {renderInterestArray()}
         {renderForm()}
@@ -272,9 +312,18 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 150,
+    paddingTop: 80,
+  },
   formBed: {
     flexDirection: 'column',
-    marginVertical: 10,
   },
   inputHeading: {
     color: '#ffff',

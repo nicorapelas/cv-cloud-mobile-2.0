@@ -42,6 +42,7 @@ const RegisterEmailScreen = () => {
   const [showSubmitButton, setShowSubmitButton] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
+  const [isInputFocused, setIsInputFocused] = useState(false)
 
   useEffect(() => {
     const { isValid } = validateEmailInput(email)
@@ -124,12 +125,24 @@ const RegisterEmailScreen = () => {
   const formHeader = () => {
     if (keyboard.keyboardShown) {
       return (
-        <Image style={styles.logoSmall} source={logo} resizeMode="contain" />
+        <View
+          style={
+            isInputFocused ? styles.logoContainerFocused : styles.logoContainer
+          }
+        >
+          <Image style={styles.logoSmall} source={logo} resizeMode="contain" />
+        </View>
       )
     }
     return (
       <>
-        <Image style={styles.logo} source={logo} resizeMode="contain" />
+        <View
+          style={
+            isInputFocused ? styles.logoContainerFocused : styles.logoContainer
+          }
+        >
+          <Image style={styles.logo} source={logo} resizeMode="contain" />
+        </View>
         <Text
           style={
             userPlanformOS === 'ios' ? styles.headingIos : styles.headingAndroid
@@ -155,7 +168,16 @@ const RegisterEmailScreen = () => {
             onChangeText={setFullName}
             autoCapitalize="words"
             autoCorrect={false}
-            onFocus={clearErrorMessage}
+            onFocus={() => {
+              setIsInputFocused(true)
+              clearErrorMessage()
+            }}
+            onBlur={() => {
+              // Only clear focus if keyboard is hidden
+              if (!keyboard.keyboardShown) {
+                setIsInputFocused(false)
+              }
+            }}
           />
           <View style={styles.validateContainer}>{validateName()}</View>
           <TextInput
@@ -167,7 +189,16 @@ const RegisterEmailScreen = () => {
             onChangeText={setEmail}
             autoCapitalize="none"
             autoCorrect={false}
-            onFocus={clearErrorMessage}
+            onFocus={() => {
+              setIsInputFocused(true)
+              clearErrorMessage()
+            }}
+            onBlur={() => {
+              // Only clear focus if keyboard is hidden
+              if (!keyboard.keyboardShown) {
+                setIsInputFocused(false)
+              }
+            }}
           />
           {renderErrorMessage()}
           <View style={styles.validateContainer}>{validateEmail()}</View>
@@ -182,7 +213,16 @@ const RegisterEmailScreen = () => {
               autoCorrect={false}
               autoComplete="off"
               textContentType="oneTimeCode"
-              onFocus={clearErrorMessage}
+              onFocus={() => {
+                setIsInputFocused(true)
+                clearErrorMessage()
+              }}
+              onBlur={() => {
+                // Only clear focus if keyboard is hidden
+                if (!keyboard.keyboardShown) {
+                  setIsInputFocused(false)
+                }
+              }}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity
@@ -204,7 +244,16 @@ const RegisterEmailScreen = () => {
             autoCorrect={false}
             autoComplete="off"
             textContentType="oneTimeCode"
-            onFocus={clearErrorMessage}
+            onFocus={() => {
+              setIsInputFocused(true)
+              clearErrorMessage()
+            }}
+            onBlur={() => {
+              // Only clear focus if keyboard is hidden
+              if (!keyboard.keyboardShown) {
+                setIsInputFocused(false)
+              }
+            }}
             secureTextEntry={!showPassword}
           />
         </View>
@@ -960,6 +1009,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRadius: 7,
     margin: 5,
+  },
+  logoContainer: {
+    alignSelf: 'center',
+  },
+  logoContainerFocused: {
+    alignSelf: 'center',
+    paddingTop: 30,
   },
   logo: {
     width: 200,

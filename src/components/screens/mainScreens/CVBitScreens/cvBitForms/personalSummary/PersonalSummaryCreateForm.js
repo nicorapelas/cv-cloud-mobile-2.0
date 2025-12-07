@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
   View,
   ScrollView,
@@ -21,6 +21,8 @@ import { Context as NavContext } from '../../../../../../context/NavContext'
 
 const PersonalSummaryCreateForm = ({ bit }) => {
   const [personalSummaryNew, setPersonalSummaryNew] = useState(null)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, error },
@@ -31,6 +33,17 @@ const PersonalSummaryCreateForm = ({ bit }) => {
   const { setCVBitScreenSelected } = useContext(NavContext)
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && personalSummaryNew !== null && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, personalSummaryNew])
 
   const errorHeading = () => {
     if (!error) return null
@@ -52,6 +65,7 @@ const PersonalSummaryCreateForm = ({ bit }) => {
       <View style={styles.formBed}>
         <Text style={styles.inputHeader}>Personal summary</Text>
         <TextInput
+          ref={inputRef}
           style={styles.inputTextArea}
           maxLength={330}
           multiline={true}
@@ -59,7 +73,15 @@ const PersonalSummaryCreateForm = ({ bit }) => {
           placeholder="personal summary"
           value={personalSummaryNew}
           onChangeText={setPersonalSummaryNew}
-          onFocus={clearPersonalSummaryErrors}
+          onFocus={() => {
+            clearPersonalSummaryErrors()
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           autoFocus={!error ? true : false}
@@ -102,12 +124,15 @@ const PersonalSummaryCreateForm = ({ bit }) => {
           ? styles.bedIos
           : styles.bedAndroid
       }
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {errorHeading()}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-        keyboardShouldPersistTaps="always"
+        ref={scrollViewRef}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {renderForm()}
         <FormHintModal bit="personalSummary" />
@@ -127,6 +152,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   formBed: {
     flexDirection: 'column',

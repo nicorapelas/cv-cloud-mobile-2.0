@@ -28,6 +28,8 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
   const [certificationType, setCertificationType] = useState(null)
   const [description, setDescription] = useState(null)
   const [additionalInfo, setAdditionalInfo] = useState(null)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
   const [instituteNameInputShow, setInstituteNameInputShow] = useState(true)
   const [datesInputShow, setDatesInputShow] = useState(false)
   const [certificateInputShow, setCertificateInputShow] = useState(false)
@@ -71,6 +73,17 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
 
   const keyboard = useKeyboard()
 
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && (instituteName !== null || description !== null || additionalInfo !== null) && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, instituteName, description, additionalInfo])
+
   const errorHeading = () => {
     if (error === null) return null
     return (
@@ -96,12 +109,21 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
       <View>
         <Text style={styles.inputHeader}>Institute Name</Text>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           maxLength={30}
           textAlign="center"
           placeholder="institute name"
           value={instituteName}
-          onFocus={clearTertEduErrors}
+          onFocus={() => {
+            clearTertEduErrors()
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           onChangeText={setSchoolName}
           autoCorrect={false}
           autoCapitalize="words"
@@ -309,12 +331,21 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
       <View>
         <Text style={styles.inputHeader}>Certification description</Text>
         <TextInput
+          ref={inputRef}
           style={styles.descriptionInputTextArea}
           maxLength={120}
           placeholder="certification description"
           numberOfLines={30}
           value={description}
           onChangeText={setDescription}
+          onFocus={() => {
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           multiline={true}
@@ -388,6 +419,7 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
       <View>
         <Text style={styles.inputHeader}>Additional information</Text>
         <TextInput
+          ref={inputRef}
           style={styles.inputTextArea}
           maxLength={180}
           multiline={true}
@@ -395,6 +427,14 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
           placeholder="additional information"
           value={additionalInfo}
           onChangeText={setAdditionalInfo}
+          onFocus={() => {
+            // Scroll to end when input is focused
+            setTimeout(() => {
+              if (scrollViewRef.current) {
+                scrollViewRef.current.scrollToEnd({ animated: true })
+              }
+            }, 300)
+          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           autoFocus={!error ? true : false}
@@ -577,13 +617,16 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
             ? styles.bedIos
             : styles.bedAndroid
         }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {errorHeading()}
         {!yearPickerShow ? (
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-            keyboardShouldPersistTaps="always"
+            ref={scrollViewRef}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             {renderPreview()}
             {renderForm()}
@@ -609,6 +652,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   formBed: {
     flexDirection: 'column',

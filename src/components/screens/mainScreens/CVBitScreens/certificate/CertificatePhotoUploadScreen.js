@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   Alert,
+  ScrollView,
 } from 'react-native'
 import { Camera } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
@@ -16,7 +17,7 @@ import * as ImageManipulator from 'expo-image-manipulator'
 import { Fontisto, MaterialIcons } from '@expo/vector-icons'
 import { useKeyboard } from '@react-native-community/hooks'
 
-import { keys } from '../../../../../../config/keys_dev'
+import keys from '../../../../../../config/keys'
 import LoaderFullScreen from '../../../../common/LoaderFullScreen'
 import PhotoPermissions from '../photo/PhotoPermissions'
 import FormCancelButton from '../../../../common/FormCancelButton'
@@ -32,6 +33,8 @@ const CertificatePhotoUploadScreen = () => {
   const [imageUploading, setImageUploading] = useState(false)
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState(null)
   const [galleryPermissionStatus, setGalleryPermissionStatus] = useState(null)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, uploadSignature },
@@ -50,10 +53,21 @@ const CertificatePhotoUploadScreen = () => {
 
   const keyboard = useKeyboard()
 
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && imageUri && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, imageUri])
+
   const handleCertificateCreate = (data) => {
     createCertificate({
       title: title,
-      photoUrl: data.url,
+      photoUrl: data.secure_url || data.url,
       publicId: data.public_id,
     })
     setImageUploading(false)
@@ -185,34 +199,46 @@ const CertificatePhotoUploadScreen = () => {
     if (!imageUri || imageUri.length < 1) return null
     return (
       <KeyboardAvoidingView
-        style={
-          Platform.OS === 'ios' && keyboard.keyboardShown === false
-            ? styles.bedIos
-            : styles.bedAndroid
-        }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardShouldPersistTaps="always"
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <Image source={{ uri: imageUri }} style={styles.photo} />
-        <TextInput
-          style={styles.input}
-          textAlign="center"
-          placeholder="image title"
-          value={title}
-          onChangeText={setTitle}
-          autoCorrect={false}
-          autoFocus={true}
-        />
-        <View style={styles.donePlusButtonBed}>
-          <FormCancelButton route="certificate" />
-          <TouchableOpacity
-            style={styles.addButtonContainer}
-            onPress={() => createUploadSignature()}
-          >
-            <MaterialIcons style={styles.addButtonIcon} name="add-circle" />
-            <Text style={styles.addButtonText}>save</Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Image source={{ uri: imageUri }} style={styles.photo} />
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            textAlign="center"
+            placeholder="image title"
+            value={title}
+            onChangeText={setTitle}
+            autoCorrect={false}
+            autoFocus={true}
+            onFocus={() => {
+              // Scroll to end when input is focused
+              setTimeout(() => {
+                if (scrollViewRef.current) {
+                  scrollViewRef.current.scrollToEnd({ animated: true })
+                }
+              }, 300)
+            }}
+          />
+          <View style={styles.donePlusButtonBed}>
+            <FormCancelButton route="certificate" />
+            <TouchableOpacity
+              style={styles.addButtonContainer}
+              onPress={() => createUploadSignature()}
+            >
+              <MaterialIcons style={styles.addButtonIcon} name="add-circle" />
+              <Text style={styles.addButtonText}>save</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     )
   }
@@ -287,6 +313,14 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
     paddingTop: '10%',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: '#232936',
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   imageSelectButton: {
     alignSelf: 'center',

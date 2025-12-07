@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: '3%',
+    paddingBottom: 60,
   },
   contentBed: {
     backgroundColor: '#ffff',

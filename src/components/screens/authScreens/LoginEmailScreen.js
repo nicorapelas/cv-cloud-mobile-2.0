@@ -25,6 +25,7 @@ const LoginEmailScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [isInputFocused, setIsInputFocused] = useState(false)
 
   const {
     state: { loading, errorMessage, apiMessage },
@@ -86,12 +87,24 @@ const LoginEmailScreen = () => {
   const formHeader = () => {
     if (keyboard.keyboardShown) {
       return (
-        <Image style={styles.logoSmall} source={logo} resizeMode="contain" />
+        <View
+          style={
+            isInputFocused ? styles.logoContainerFocused : styles.logoContainer
+          }
+        >
+          <Image style={styles.logoSmall} source={logo} resizeMode="contain" />
+        </View>
       )
     }
     return (
       <>
-        <Image style={styles.logo} source={logo} resizeMode="contain" />
+        <View
+          style={
+            isInputFocused ? styles.logoContainerFocused : styles.logoContainer
+          }
+        >
+          <Image style={styles.logo} source={logo} resizeMode="contain" />
+        </View>
         <Text
           style={
             userPlanformOS === 'ios' ? styles.headingIos : styles.headingAndroid
@@ -127,7 +140,16 @@ const LoginEmailScreen = () => {
             onChangeText={setEmail}
             autoCapitalize="none"
             autoCorrect={false}
-            onFocus={clearErrorMessage}
+            onFocus={() => {
+              setIsInputFocused(true)
+              clearErrorMessage()
+            }}
+            onBlur={() => {
+              // Only clear focus if keyboard is hidden
+              if (!keyboard.keyboardShown) {
+                setIsInputFocused(false)
+              }
+            }}
           />
           <View style={styles.passwordInputBed}>
             <TextInput
@@ -139,7 +161,16 @@ const LoginEmailScreen = () => {
               autoCorrect={false}
               autoComplete="off"
               textContentType="oneTimeCode"
-              onFocus={clearErrorMessage}
+              onFocus={() => {
+                setIsInputFocused(true)
+                clearErrorMessage()
+              }}
+              onBlur={() => {
+                // Only clear focus if keyboard is hidden
+                if (!keyboard.keyboardShown) {
+                  setIsInputFocused(false)
+                }
+              }}
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity
@@ -266,6 +297,13 @@ const styles = StyleSheet.create({
     color: '#ffff',
     fontSize: 27,
     alignSelf: 'center',
+  },
+  logoContainer: {
+    alignSelf: 'center',
+  },
+  logoContainerFocused: {
+    alignSelf: 'center',
+    paddingTop: 30,
   },
   logo: {
     width: 200,

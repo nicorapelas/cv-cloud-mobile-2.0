@@ -17,7 +17,8 @@ import moment from 'moment'
 
 import FormHintModal from '../../../../../common/modals/FormHintModal'
 import LoaderFullScreen from '../../../../../common/LoaderFullScreen'
-import OptionsModal from '../../../../../common/modals/OptionsModal'
+import CountrySelector from '../../../../../common/selectors/CountrySelector'
+import GenderSelector from '../../../../../common/selectors/GenderSelector'
 import DriversLicenseInput from './DriversLicenseInput'
 import FormCancelButton from '../../../../../common/FormCancelButton'
 import { Context as PersonalInfoContext } from '../../../../../../context/PersonalInfoContext'
@@ -46,7 +47,10 @@ const PersonalInfoCreateForm = ({
 
   const [gender, setGender] = useState(incomingGender ? incomingGender : null)
   const [country, setCountry] = useState(detectUserCountry())
-  const [saCitizen, setSaCitizen] = useState(true)
+  // Default saCitizen based on country: true for ZA, false for others
+  const [saCitizen, setSaCitizen] = useState(
+    detectUserCountry() === 'ZA' ? true : false
+  )
 
   const [idNumber, setIdNumber] = useState(
     incomingIdNumber ? incomingIdNumber : null
@@ -69,14 +73,13 @@ const PersonalInfoCreateForm = ({
   const [dummyDateShow, setDummyDateShow] = useState(false)
   const [saveButtonShow, setSaveButtonShow] = useState(false)
 
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
+
   // Get country configuration based on selected country
   const countryConfig = getCountryConfig(country)
 
-  const {
-    state: { optionPickerShow, optionsModalSelectedOption },
-    toggleHideNavLinks,
-    setOptionPickerShow,
-  } = useContext(UniversalContext)
+  const { toggleHideNavLinks } = useContext(UniversalContext)
 
   const {
     state: { loading, error, driversLicense, licenseCode },
@@ -97,33 +100,47 @@ const PersonalInfoCreateForm = ({
     }
   }, [])
 
+  // Debug: Log country state changes
   useEffect(() => {
-    if (optionsModalSelectedOption) {
-      // Handle country selection (format: "🇿🇦 South Africa")
-      if (optionPickerShow === 'country') {
-        const selectedCountry = COUNTRIES.find((c) =>
-          optionsModalSelectedOption.includes(c.name)
-        )
-        if (selectedCountry) {
-          setCountry(selectedCountry.code)
-        }
-      } else {
-        // Handle gender selection
-        setGender(optionsModalSelectedOption)
-      }
+    console.log('PersonalInfoCreateForm: Country state changed to:', country)
+  }, [country])
+
+  // Update saCitizen when country changes: true for ZA, false for others
+  useEffect(() => {
+    if (country === 'ZA') {
+      setSaCitizen(true)
+    } else {
+      setSaCitizen(false)
     }
-  }, [optionsModalSelectedOption])
+  }, [country])
 
   useEffect(() => {
     if (error) toggleHideNavLinks(false)
   }, [error])
 
   useEffect(() => {
-    if (incomingSaCitizen === false) setSaCitizen(false)
-    if (saCitizen === undefined || saCitizen === true) setSaCitizen(true)
-  }, [incomingSaCitizen, saCitizen])
+    // Only override with incoming value if it's explicitly set
+    if (incomingSaCitizen !== undefined) {
+      setSaCitizen(incomingSaCitizen)
+    }
+  }, [incomingSaCitizen])
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (
+      keyboard.keyboardShown &&
+      (fullNameInputShow || idInputShow) &&
+      scrollViewRef.current
+    ) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, fullNameInputShow, idInputShow])
 
   const errorHeading = () => {
     if (!error) return null
@@ -153,18 +170,20 @@ const PersonalInfoCreateForm = ({
     if (!genderInputShow) return null
     return (
       <>
-        {optionPickerShow ? null : (
-          <Text style={styles.inputHeader}>Gender</Text>
-        )}
-        <OptionsModal bit="gender" incomingValue={gender} />
-        {optionPickerShow ? null : (
+        <Text style={styles.inputHeader}>Gender</Text>
+        <GenderSelector
+          selectedGender={gender}
+          onSelect={(genderValue) => {
+            setGender(genderValue)
+          }}
+        />
+        {
           <View style={styles.nextBackButtonsBed}>
             <TouchableOpacity
               style={styles.addButtonContainer}
               onPress={() => {
                 setGenderInputShow(false)
                 setDateOfBirthInputShow(true)
-                setOptionPickerShow(false)
               }}
             >
               <Ionicons
@@ -178,7 +197,6 @@ const PersonalInfoCreateForm = ({
               onPress={() => {
                 setGenderInputShow(false)
                 setIdInputShow(true)
-                setOptionPickerShow(false)
               }}
             >
               <Text style={styles.addButtonText}>next</Text>
@@ -188,7 +206,7 @@ const PersonalInfoCreateForm = ({
               />
             </TouchableOpacity>
           </View>
-        )}
+        }
       </>
     )
   }
@@ -356,19 +374,29 @@ const PersonalInfoCreateForm = ({
         <View>
           <Text style={styles.inputHeader}>Full Name</Text>
           <TextInput
+            ref={inputRef}
             style={styles.input}
             maxLength={30}
             onSubmitEditing={() => fullNameInputNext()}
             autoFocus={!error ? true : false}
             returnKeyLabel="next"
+            returnKeyType="next"
             textAlign="center"
             placeholder="full name"
             value={fullName}
             onChangeText={setFullName}
-            onFocus={clearErrors}
-            onChange={clearErrors}
+            onFocus={() => {
+              clearErrors()
+              // Scroll to end when input is focused
+              setTimeout(() => {
+                if (scrollViewRef.current) {
+                  scrollViewRef.current.scrollToEnd({ animated: true })
+                }
+              }, 300)
+            }}
             autoCorrect={false}
             autoCapitalize="words"
+            editable={true}
           />
         </View>
         {!error ? (
@@ -401,7 +429,7 @@ const PersonalInfoCreateForm = ({
     return (
       <>
         <View>
-          <Text style={styles.inputHeader}>Country</Text>
+          <Text style={[styles.inputHeader, { marginBottom: 5 }]}>Country</Text>
           <Text style={styles.helperText}>
             {country === 'ZA'
               ? '🇿🇦 South Africa - Full features available'
@@ -409,23 +437,16 @@ const PersonalInfoCreateForm = ({
                   COUNTRIES.find((c) => c.code === country)?.flag || '🌍'
                 } International`}
           </Text>
-          <TouchableOpacity
-            style={styles.pickerButton}
-            onPress={() => {
-              setOptionPickerShow('country')
+          <CountrySelector
+            selectedCountryCode={country}
+            onSelect={(countryCode) => {
+              console.log(
+                'PersonalInfoCreateForm: Country selected:',
+                countryCode
+              )
+              setCountry(countryCode)
               toggleHideNavLinks(false)
             }}
-          >
-            <Text style={styles.pickerButtonText}>
-              {COUNTRIES.find((c) => c.code === country)?.name ||
-                'Select Country'}
-            </Text>
-            <AntDesign name="down" size={16} color="#278acd" />
-          </TouchableOpacity>
-          <OptionsModal
-            bit="country"
-            optionsArray={COUNTRIES.map((c) => `${c.flag} ${c.name}`)}
-            selected={COUNTRIES.find((c) => c.code === country)?.name}
           />
         </View>
         <View style={styles.nextBackButtonsBed}>
@@ -486,48 +507,49 @@ const PersonalInfoCreateForm = ({
             <Text style={styles.inputHeader}>{countryConfig.idLabel}</Text>
             <Text style={styles.helperText}>{countryConfig.idHelperText}</Text>
             <TextInput
+              ref={inputRef}
               style={styles.input}
               maxLength={country === 'ZA' ? 13 : 20}
               textAlign="center"
               placeholder={countryConfig.idPlaceholder}
               value={idNumber}
               onChangeText={setIdNumber}
+              onFocus={() => {
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
+              }}
               autoCorrect={false}
               keyboardType="phone-pad"
+              editable={true}
             />
           </View>
         ) : (
-          <>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeader}>Nationality</Text>
-              <TextInput
-                style={styles.input}
-                maxLength={25}
-                textAlign="center"
-                placeholder="nationality"
-                value={nationality}
-                onChangeText={setNationality}
-                autoCorrect={true}
-                autoCapitalize="words"
-              />
-              <Text style={styles.maxCharactersNote}>
-                max 25 characters ({!nationality ? '0' : nationality.length}
-                /25)
-              </Text>
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeader}>Passport Number</Text>
-              <TextInput
-                style={styles.input}
-                maxLength={10}
-                textAlign="center"
-                placeholder="passport number"
-                value={ppNumber}
-                onChangeText={setPpNumber}
-                autoCorrect={false}
-              />
-            </View>
-          </>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputHeader}>Passport Number</Text>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              maxLength={10}
+              textAlign="center"
+              placeholder="passport number"
+              value={ppNumber}
+              onChangeText={setPpNumber}
+              onFocus={() => {
+                // Scroll to end when input is focused
+                setTimeout(() => {
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollToEnd({ animated: true })
+                  }
+                }, 300)
+              }}
+              autoCorrect={false}
+              editable={true}
+            />
+          </View>
         )}
         <View style={styles.nextBackButtonsBed}>
           <TouchableOpacity
@@ -569,6 +591,7 @@ const PersonalInfoCreateForm = ({
   const saveButton = () => {
     let thisDate = new Date()
     if (!saveButtonShow) return null
+    console.log('PersonalInfoCreateForm: Saving with country state:', country)
     const formValuesToSubmit = {
       fullName,
       dateOfBirth:
@@ -578,12 +601,15 @@ const PersonalInfoCreateForm = ({
       country,
       gender,
       saCitizen,
-      nationality,
       idNumber,
       ppNumber,
       driversLicense,
       licenseCode,
     }
+    console.log(
+      'PersonalInfoCreateForm: formValuesToSubmit:',
+      formValuesToSubmit
+    )
     return (
       <View style={styles.nextBackButtonsBed}>
         <TouchableOpacity
@@ -635,16 +661,18 @@ const PersonalInfoCreateForm = ({
             <Text style={styles.previewText}>{gender}</Text>
           </View>
         )}
-        {!saCitizen ? null : (
+        {!country ? null : (
+          <View>
+            <Text style={styles.previewLabel}>Country</Text>
+            <Text style={styles.previewText}>
+              {COUNTRIES.find((c) => c.code === country)?.name || country}
+            </Text>
+          </View>
+        )}
+        {!saCitizen || country !== 'ZA' ? null : (
           <View>
             <Text style={styles.previewLabel}>Nationality</Text>
             <Text style={styles.previewText}>South African</Text>
-          </View>
-        )}
-        {saCitizen || !nationality ? null : (
-          <View>
-            <Text style={styles.previewLabel}>Nationality</Text>
-            <Text style={styles.previewText}>{nationality}</Text>
           </View>
         )}
         {saCitizen || !ppNumber ? null : (
@@ -662,7 +690,24 @@ const PersonalInfoCreateForm = ({
         {!licenseCode || !driversLicense ? null : (
           <View>
             <Text style={styles.previewLabel}>Driver license</Text>
-            <Text style={styles.previewText}>Code: {licenseCode}</Text>
+            <Text style={styles.previewText}>
+              {country === 'ZA'
+                ? `Code: ${licenseCode}`
+                : (() => {
+                    const licenseMap = {
+                      MOTORCYCLE: 'Motorcycle',
+                      LIGHT_MOTOR: 'Light motor vehicle',
+                      MEDIUM_COMMERCIAL: 'Medium commercial vehicle',
+                      HEAVY_COMMERCIAL: 'Heavy commercial vehicle',
+                      LIGHT_MOTOR_TRAILER: 'Light motor vehicle with trailer',
+                      MEDIUM_COMMERCIAL_TRAILER:
+                        'Medium commercial vehicle with trailer',
+                      HEAVY_COMMERCIAL_TRAILER:
+                        'Heavy commercial vehicle with trailer',
+                    }
+                    return licenseMap[licenseCode] || licenseCode
+                  })()}
+            </Text>
           </View>
         )}
       </View>
@@ -671,7 +716,7 @@ const PersonalInfoCreateForm = ({
 
   const renderForm = () => {
     return (
-      <>
+      <View style={styles.formBed}>
         {renderNameField()}
         {renderCountrySelector()}
         {renderDatePicker()}
@@ -679,7 +724,7 @@ const PersonalInfoCreateForm = ({
         {renderSaCitizenFields()}
         {!licenseInputShow ? null : (
           <>
-            <DriversLicenseInput />
+            <DriversLicenseInput country={country} />
             <View style={styles.nextBackButtonsBed}>
               <TouchableOpacity
                 style={styles.addButtonContainer}
@@ -711,10 +756,10 @@ const PersonalInfoCreateForm = ({
           </>
         )}
         {saveButton()}
-        {datePickerOpen || saveButtonShow || optionPickerShow ? null : (
+        {datePickerOpen || saveButtonShow ? null : (
           <FormHintModal bit="personalInfo" />
         )}
-      </>
+      </View>
     )
   }
 
@@ -727,15 +772,19 @@ const PersonalInfoCreateForm = ({
             ? styles.bedIos
             : styles.bedAndroid
         }
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {errorHeading()}
         <ScrollView
-          contentContainerStyle={{
-            justifyContent: 'center',
-            flexGrow: 1,
-          }}
-          keyboardShouldPersistTaps="always"
+          ref={scrollViewRef}
+          contentContainerStyle={
+            keyboard.keyboardShown
+              ? styles.scrollContent
+              : styles.scrollContentCentered
+          }
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           {renderPreview()}
           {renderForm()}
@@ -966,6 +1015,19 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 5,
     marginTop: -3,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingBottom: 150,
+    paddingTop: 40,
+  },
+  formBed: {
+    flexDirection: 'column',
   },
   pickerButton: {
     backgroundColor: '#ffffff',

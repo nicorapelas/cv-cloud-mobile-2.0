@@ -4,6 +4,7 @@ import { useKeyboard } from '@react-native-community/hooks'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Context as UniversalContext } from '../../../context/UniversalContext'
+import { Context as NavContext } from '../../../context/NavContext'
 import DashboardNav from './DashboardNav'
 import ViewCV from './ViewCV'
 import ShareCV from './ShareCV'
@@ -13,16 +14,21 @@ const NavBar = ({ videoUploading = false, isRecording = false }) => {
     state: { imageToViewUrl },
   } = useContext(UniversalContext)
 
+  const {
+    state: { CVBitScreenSelected },
+  } = useContext(NavContext)
+
   const keyboard = useKeyboard()
   const insets = useSafeAreaInsets()
 
   const renderContent = () => {
-    // Hide navbar during: keyboard, image viewing, video recording, or video uploading
+    // Hide navbar during: keyboard, image viewing, video recording, video uploading, or when in a CV bit form
     if (
       keyboard.keyboardShown ||
       imageToViewUrl ||
       videoUploading ||
-      isRecording
+      isRecording ||
+      CVBitScreenSelected !== ''
     )
       return null
     return (

@@ -24,6 +24,8 @@ import { Context as NavContext } from '../../../../../../context/NavContext'
 const SkillEditForm = () => {
   const [skill, setSkill] = useState(null)
   const [proficiencyInputShow, setProficiencyInputShow] = useState(false)
+  const scrollViewRef = React.useRef(null)
+  const inputRef = React.useRef(null)
 
   const {
     state: { loading, error, skillToEdit },
@@ -51,6 +53,17 @@ const SkillEditForm = () => {
   }, [skillToEdit])
 
   const keyboard = useKeyboard()
+
+  // Scroll to input when keyboard appears
+  useEffect(() => {
+    if (keyboard.keyboardShown && skill !== null && !proficiencyInputShow && scrollViewRef.current) {
+      setTimeout(() => {
+        if (scrollViewRef.current) {
+          scrollViewRef.current.scrollToEnd({ animated: true })
+        }
+      }, 300)
+    }
+  }, [keyboard.keyboardShown, skill, proficiencyInputShow])
 
   const errorHeading = () => {
     if (!error) return null
@@ -161,13 +174,22 @@ const SkillEditForm = () => {
             <>
               <Text style={styles.inputHeading}>Skill</Text>
               <TextInput
+                ref={inputRef}
                 style={styles.input}
                 maxLength={25}
                 textAlign="center"
                 placeholder="skill"
                 value={skill}
                 onChangeText={setSkill}
-                onFocus={() => clearSkillErrors()}
+                onFocus={() => {
+                  clearSkillErrors()
+                  // Scroll to end when input is focused
+                  setTimeout(() => {
+                    if (scrollViewRef.current) {
+                      scrollViewRef.current.scrollToEnd({ animated: true })
+                    }
+                  }, 300)
+                }}
                 autoCorrect={true}
                 autoFocus={!error ? true : false}
               />
@@ -196,12 +218,15 @@ const SkillEditForm = () => {
           ? styles.bedIos
           : styles.bedAndroid
       }
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {errorHeading()}
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
-        keyboardShouldPersistTaps="always"
+        ref={scrollViewRef}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {renderForm()}
       </ScrollView>
@@ -220,6 +245,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 150,
+    paddingTop: 40,
   },
   formBed: {
     flexDirection: 'column',

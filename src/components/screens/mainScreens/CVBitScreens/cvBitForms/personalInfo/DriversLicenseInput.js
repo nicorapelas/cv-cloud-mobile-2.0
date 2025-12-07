@@ -1,24 +1,38 @@
 import React, { useState, useContext, useEffect } from 'react'
-import { View, Text, Switch, StyleSheet } from 'react-native'
-import Checkbox from 'expo-checkbox'
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+} from 'react-native'
+import { AntDesign } from '@expo/vector-icons'
 
 import { Context as PersonalInfoContext } from '../../../../../../context/PersonalInfoContext'
 
-const DriversLicenceInput = () => {
+const DriversLicenceInput = ({ country = 'ZA' }) => {
   const {
     state: { driversLicense, licenseCode },
     setLicenseCode,
     setDirversLicense,
   } = useContext(PersonalInfoContext)
 
-  const [A, setA] = useState(licenseCode === 'A' ? true : false)
-  const [A1, setA1] = useState(licenseCode === 'A1' ? true : false)
-  const [B, setB] = useState(licenseCode === 'B' ? true : false)
-  const [C1, setC1] = useState(licenseCode === 'C1' ? true : false)
-  const [C, setC] = useState(licenseCode === 'C' ? true : false)
-  const [EB, setEB] = useState(licenseCode === 'EB' ? true : false)
-  const [EC1, setEC1] = useState(licenseCode === 'EC1' ? true : false)
-  const [EC, setEC] = useState(licenseCode === 'EC' ? true : false)
+  const isSouthAfrica = country === 'ZA'
+  const [showLicenseModal, setShowLicenseModal] = useState(false)
+
+  // SA-specific license codes
+  const saLicenseCodes = [
+    { code: 'A', label: 'A - Motorcycle' },
+    { code: 'A1', label: 'A1 - Light Motorcycle' },
+    { code: 'B', label: 'B - Light Motor Vehicle' },
+    { code: 'C1', label: 'C1 - Light Delivery Vehicle' },
+    { code: 'C', label: 'C - Heavy Motor Vehicle' },
+    { code: 'EB', label: 'EB - Light Motor Vehicle with Trailer' },
+    { code: 'EC1', label: 'EC1 - Light Delivery Vehicle with Trailer' },
+    { code: 'EC', label: 'EC - Heavy Motor Vehicle with Trailer' },
+  ]
 
   const toggleDiversLicense = () => setDirversLicense(!driversLicense)
 
@@ -41,171 +55,153 @@ const DriversLicenceInput = () => {
     )
   }
 
+  // Generic license types for non-South Africans
+  const genericLicenseTypes = [
+    { code: 'MOTORCYCLE', label: 'Motorcycle' },
+    { code: 'LIGHT_MOTOR', label: 'Light motor vehicle' },
+    { code: 'MEDIUM_COMMERCIAL', label: 'Medium commercial vehicle' },
+    { code: 'HEAVY_COMMERCIAL', label: 'Heavy commercial vehicle' },
+    { code: 'LIGHT_MOTOR_TRAILER', label: 'Light motor vehicle with trailer' },
+    {
+      code: 'MEDIUM_COMMERCIAL_TRAILER',
+      label: 'Medium commercial vehicle with trailer',
+    },
+    {
+      code: 'HEAVY_COMMERCIAL_TRAILER',
+      label: 'Heavy commercial vehicle with trailer',
+    },
+  ]
+
+  const handleLicenseSelect = (code) => {
+    setLicenseCode(code)
+    setShowLicenseModal(false)
+  }
+
   const renderLicenseSelector = () => {
     if (!driversLicense) return null
-    return (
-      <>
-        <Text style={styles.licenseCodeIntruction}>select license code</Text>
-        <View style={styles.licenseCodecheckContainer}>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>A</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={A}
-              onValueChange={() => {
-                setLicenseCode('A')
-                setA(true)
-                setA1(false)
-                setB(false)
-                setC1(false)
-                setC(false)
-                setEB(false)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>A1</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={A1}
-              onValueChange={() => {
-                setLicenseCode('A1')
-                setA(false)
-                setA1(true)
-                setB(false)
-                setC1(false)
-                setC(false)
-                setEB(false)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>B</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={B}
-              onValueChange={() => {
-                setLicenseCode('B')
-                setA(false)
-                setA1(false)
-                setB(true)
-                setC1(false)
-                setC(false)
-                setEB(false)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-        </View>
-        <View style={styles.licenseCodecheckContainer}>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>C</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={C}
-              onValueChange={() => {
-                setLicenseCode('C')
-                setA(false)
-                setA1(false)
-                setB(false)
-                setC1(false)
-                setC(true)
-                setEB(false)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>C1</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={C1}
-              onValueChange={() => {
-                setLicenseCode('C1')
-                setA(false)
-                setA1(false)
-                setB(false)
-                setC1(true)
-                setC(false)
-                setEB(false)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>EB</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={EB}
-              onValueChange={() => {
-                setLicenseCode('EB')
-                setA(false)
-                setA1(false)
-                setB(false)
-                setC1(false)
-                setC(false)
-                setEB(true)
-                setEC1(false)
-                setEC(false)
-              }}
-            />
-          </View>
-        </View>
-        <View style={styles.licenseCodecheckContainer}>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>EC</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={EC}
-              onValueChange={() => {
-                setLicenseCode('EC')
-                setA(false)
-                setA1(false)
-                setB(false)
-                setC1(false)
-                setC(false)
-                setEB(false)
-                setEC1(false)
-                setEC(true)
-              }}
-            />
-          </View>
-          <View style={styles.licenseCodecheck}>
-            <Text style={styles.licenseCodeCheckText}>EC1</Text>
-            <Checkbox
-              color="#278ACD"
-              disabled={false}
-              value={EC1}
-              onValueChange={() => {
-                setLicenseCode('EC1')
-                setA(false)
-                setA1(false)
-                setB(false)
-                setC1(false)
-                setC(false)
-                setEB(false)
-                setEC1(true)
-                setEC(false)
-              }}
-            />
-          </View>
-        </View>
-      </>
-    )
+
+    if (isSouthAfrica) {
+      // South African license codes - Modal selector
+      const selectedLicense = saLicenseCodes.find((l) => l.code === licenseCode)
+      const displayValue = selectedLicense
+        ? selectedLicense.label
+        : 'Select License Code'
+
+      return (
+        <>
+          <Text style={styles.licenseCodeInstruction}>
+            select license code
+          </Text>
+          <Modal
+            transparent={true}
+            visible={showLicenseModal}
+            animationType="fade"
+            onRequestClose={() => setShowLicenseModal(false)}
+          >
+            <TouchableOpacity
+              style={styles.modalBackground}
+              activeOpacity={1}
+              onPress={() => setShowLicenseModal(false)}
+            >
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={(e) => e.stopPropagation()}
+                style={styles.modalBed}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Select License Code</Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setShowLicenseModal(false)}
+                  >
+                    <AntDesign name="close" size={24} color="#ffff" />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView
+                  style={styles.optionsBedScroll}
+                  contentContainerStyle={styles.optionsBedContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {saLicenseCodes.map((license) => {
+                    const isSelected = licenseCode === license.code
+                    return (
+                      <TouchableOpacity
+                        key={license.code}
+                        style={[
+                          styles.option,
+                          isSelected && styles.optionSelected,
+                        ]}
+                        onPress={() => handleLicenseSelect(license.code)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            isSelected && styles.optionTextSelected,
+                          ]}
+                        >
+                          {license.label}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </ScrollView>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </Modal>
+          <TouchableOpacity
+            style={styles.licenseButton}
+            onPress={() => setShowLicenseModal(true)}
+          >
+            <Text
+              style={
+                selectedLicense
+                  ? styles.licenseButtonText
+                  : styles.licenseButtonTextPlaceholder
+              }
+            >
+              {displayValue}
+            </Text>
+            <AntDesign name="down" size={16} color="#278acd" />
+          </TouchableOpacity>
+        </>
+      )
+    } else {
+      // Generic license types for non-South Africans
+      return (
+        <>
+          <Text style={styles.licenseCodeIntruction}>
+            select license type
+          </Text>
+          {genericLicenseTypes.map((licenseType) => {
+            const isSelected = licenseCode === licenseType.code
+            return (
+              <TouchableOpacity
+                key={licenseType.code}
+                style={[
+                  styles.genericLicenseOption,
+                  isSelected && styles.genericLicenseOptionSelected,
+                ]}
+                onPress={() => setLicenseCode(licenseType.code)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.genericLicenseText,
+                    isSelected && styles.genericLicenseTextSelected,
+                  ]}
+                >
+                  {licenseType.label}
+                </Text>
+                {isSelected && (
+                  <AntDesign name="checkcircle" size={20} color="#278acd" />
+                )}
+              </TouchableOpacity>
+            )
+          })}
+        </>
+      )
+    }
   }
 
   const renderContent = () => {
@@ -231,32 +227,120 @@ const styles = StyleSheet.create({
     color: '#ffff',
     paddingHorizontal: 10,
   },
-  licenseCodeIntruction: {
+  licenseCodeInstruction: {
     color: '#ffff',
     alignSelf: 'center',
     paddingTop: 7,
     marginBottom: 15,
+    fontSize: 16,
   },
-  licenseCodecheckContainer: {
+  licenseButton: {
+    backgroundColor: '#ffffff',
+    alignSelf: 'center',
+    height: 50,
+    width: '85%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 5,
+    paddingHorizontal: 15,
+    borderRadius: 7,
+    margin: 5,
   },
-  licenseCodecheck: {
+  licenseButtonTextPlaceholder: {
+    color: '#B6B8BA',
+  },
+  licenseButtonText: {
+    color: '#030303',
+    fontSize: 16,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalBed: {
+    backgroundColor: '#232936',
+    width: '85%',
+    maxHeight: '80%',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#278acd',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3a4150',
+  },
+  modalTitle: {
+    color: '#ffff',
+    fontSize: 18,
+    fontWeight: '600',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  optionsBedScroll: {
+    maxHeight: 400,
+  },
+  optionsBedContent: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  option: {
+    backgroundColor: '#1a1d2e',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 7,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: '#3a4150',
+  },
+  optionSelected: {
+    backgroundColor: '#278acd',
+    borderColor: '#278acd',
+  },
+  optionText: {
+    color: '#ffff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  optionTextSelected: {
+    color: '#ffff',
+    fontWeight: '600',
+  },
+  genericLicenseOption: {
     backgroundColor: '#232936',
     flexDirection: 'row',
-    justifyContent: 'center',
-    width: '20%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '85%',
+    alignSelf: 'center',
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 7,
     borderColor: '#ffff',
-    paddingVertical: 10,
-    marginHorizontal: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    marginBottom: 8,
   },
-  licenseCodeCheckText: {
+  genericLicenseOptionSelected: {
+    backgroundColor: '#278acd',
+    borderColor: '#278acd',
+  },
+  genericLicenseText: {
     color: '#ffff',
-    fontSize: 17,
-    paddingRight: 7,
+    fontSize: 16,
+    flex: 1,
+  },
+  genericLicenseTextSelected: {
+    color: '#ffff',
+    fontWeight: '600',
   },
 })
 

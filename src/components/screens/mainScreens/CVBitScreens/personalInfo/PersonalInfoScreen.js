@@ -22,6 +22,7 @@ import DeleteModal from '../../../../common/modals/DeleteModal'
 import { Context as PersonalInfoContext } from '../../../../../context/PersonalInfoContext'
 import { Context as UniversalContext } from '../../../../../context/UniversalContext'
 import { Context as NavContext } from '../../../../../context/NavContext'
+import { COUNTRIES } from '../../../../../utils/countryConfig'
 
 const PersonalInfoScreen = () => {
   const [documentId, setDocumentId] = useState('')
@@ -56,6 +57,7 @@ const PersonalInfoScreen = () => {
       gender,
       ppNumber,
       dateOfBirth,
+      country,
       saCitizen,
       nationality,
       driversLicense,
@@ -95,7 +97,15 @@ const PersonalInfoScreen = () => {
               <Text style={styles.text}>{gender}</Text>
             </View>
           )}
-          {!saCitizen ? null : (
+          {!country ? null : (
+            <View style={styles.contentRow}>
+              <FontAwesome5 style={styles.icon} name="globe-africa" />
+              <Text style={styles.text}>
+                {COUNTRIES.find((c) => c.code === country)?.name || country}
+              </Text>
+            </View>
+          )}
+          {!saCitizen || country !== 'ZA' ? null : (
             <View style={styles.contentRow}>
               <FontAwesome5 style={styles.icon} name="globe-africa" />
               <Text style={styles.text}>South African</Text>
@@ -210,6 +220,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: '5%',
+    paddingBottom: 60,
   },
   contentBed: {
     backgroundColor: '#ffff',
