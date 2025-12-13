@@ -63,6 +63,10 @@ const ContactInfoScreen = () => {
       postalCode,
       province,
     } = contactInfo[0]
+
+    const normalizeEmpty = (val) =>
+      val === undefined || val === null || (typeof val === 'string' && val.trim().length === 0)
+    const showAddIcon = normalizeEmpty(city) && normalizeEmpty(phone)
     return (
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
@@ -153,7 +157,10 @@ const ContactInfoScreen = () => {
             style={styles.editButtonBed}
             onPress={() => handlePressEdit(contactInfo[0])}
           >
-            <MaterialCommunityIcons style={styles.actionButton} name="pencil" />
+            <MaterialCommunityIcons
+              style={styles.actionButton}
+              name={showAddIcon ? 'plus' : 'pencil'}
+            />
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButtonBed}>
             <MaterialCommunityIcons

@@ -64,6 +64,26 @@ const PersonalInfoScreen = () => {
       licenseCode,
       lastUpdate,
     } = personalInfo[0]
+
+    const isEmptyField = (value) => {
+      if (value === undefined || value === null) return true
+      if (typeof value === 'string') {
+        const trimmed = value.trim().toLowerCase()
+        return (
+          trimmed.length === 0 ||
+          trimmed === 'none' ||
+          trimmed === 'unspecified' ||
+          trimmed === 'n/a' ||
+          trimmed === 'na' ||
+          trimmed === 'null' ||
+          trimmed === 'undefined'
+        )
+      }
+      return false
+    }
+
+    const showAddIcon =
+      isEmptyField(gender) && isEmptyField(dateOfBirth)
     return (
       <>
         <View style={styles.contentBed}>
@@ -152,7 +172,10 @@ const PersonalInfoScreen = () => {
             style={styles.editButtonBed}
             onPress={handlePressEdit}
           >
-            <MaterialCommunityIcons style={styles.actionButton} name="pencil" />
+            <MaterialCommunityIcons
+              style={styles.actionButton}
+              name={showAddIcon ? 'plus' : 'pencil'}
+            />
           </TouchableOpacity>
           <TouchableOpacity style={styles.deleteButtonBed}>
             <MaterialCommunityIcons

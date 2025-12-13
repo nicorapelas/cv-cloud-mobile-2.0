@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -43,6 +43,8 @@ const RegisterEmailScreen = () => {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [isInputFocused, setIsInputFocused] = useState(false)
+  const scrollViewRef = useRef(null)
+  const signUpButtonRef = useRef(null)
 
   useEffect(() => {
     const { isValid } = validateEmailInput(email)
@@ -55,6 +57,26 @@ const RegisterEmailScreen = () => {
     if (check === 5) setShowSubmitButton(true)
     else setShowSubmitButton(false)
   }, [fullName, email, password, password2, termsAccepted])
+
+  // Auto scroll to bottom when terms are accepted
+  useEffect(() => {
+    if (termsAccepted && scrollViewRef.current) {
+      // Small delay to ensure the button is rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true })
+      }, 100)
+    }
+  }, [termsAccepted])
+
+  // Also scroll when Sign Up button appears to ensure it's visible
+  useEffect(() => {
+    if (showSubmitButton && scrollViewRef.current) {
+      // Small delay to ensure the button is fully rendered
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true })
+      }, 150)
+    }
+  }, [showSubmitButton])
 
   const keyboard = useKeyboard()
 
@@ -278,6 +300,7 @@ const RegisterEmailScreen = () => {
 
         {!showSubmitButton ? null : (
           <TouchableOpacity
+            ref={signUpButtonRef}
             style={styles.button}
             onPress={() =>
               register({
@@ -956,6 +979,7 @@ const RegisterEmailScreen = () => {
           behavior={userPlanformOS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
             keyboardShouldPersistTaps="always"
           >

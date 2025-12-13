@@ -43,6 +43,7 @@ const ContactInfoEditForm = () => {
   const [phoneInputShoow, setPhoneInputShow] = useState(false)
   const [addressInputShow, setAddressInputShow] = useState(false)
   const [saveButtonShow, setSaveButtonShow] = useState(false)
+  const autoJumpedRef = React.useRef(false)
 
   const { toggleHideNavLinks } = useContext(UniversalContext)
 
@@ -170,6 +171,27 @@ const ContactInfoEditForm = () => {
       setProvince(province)
       setCountry(country)
       setPostalCode(postalCode)
+
+      const isEmptyVal = (val) => {
+        if (val === undefined || val === null) return true
+        if (typeof val === 'string') return val.trim().length === 0
+        return false
+      }
+
+      const missingPhone = isEmptyVal(phone)
+      const missingCity = isEmptyVal(city)
+
+      // If both city and phone are missing, jump straight to phone step
+      if (missingPhone && missingCity && !autoJumpedRef.current) {
+        autoJumpedRef.current = true
+        setEmailInputShow(false)
+        setPhoneInputShow(true)
+        setAddressInputShow(false)
+        setSaveButtonShow(false)
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true })
+        }, 250)
+      }
     }
   }, [contactInfoToEdit])
 

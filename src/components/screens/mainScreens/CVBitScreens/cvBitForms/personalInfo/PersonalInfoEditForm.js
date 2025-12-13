@@ -69,6 +69,14 @@ const PersonalInfoEditForm = () => {
 
   const { setCVBitScreenSelected } = useContext(NavContext)
 
+  const isEmptyVal = (value) => {
+    if (value === undefined || value === null) return true
+    if (typeof value === 'string') {
+      return value.trim().length === 0
+    }
+    return false
+  }
+
   useEffect(() => {
     const {
       fullName,
@@ -80,7 +88,9 @@ const PersonalInfoEditForm = () => {
       nationality,
       ppNumber,
       saCitizen,
+      dateOfBirth: incomingDob,
     } = personalInfoToEdit
+
     if (fullName) setFullName(fullName)
     if (driversLicense) setDirversLicense(driversLicense)
     if (gender) setGender(gender)
@@ -90,12 +100,30 @@ const PersonalInfoEditForm = () => {
     if (incomingLicenseCode) setLicenseCode(incomingLicenseCode)
     if (nationality) setNationality(nationality)
     if (ppNumber) setPpNumber(ppNumber)
+
+    const missingDob = isEmptyVal(incomingDob)
+    const missingGender = isEmptyVal(gender)
+
+    // If both gender and DOB are missing (i.e., user tapped '+'), jump straight to DOB step
+    if (missingDob && missingGender) {
+      setFullNameInputShow(false)
+      setCountryInputShow(false)
+      setDateOfBirthInputShow(true)
+      setGenderInputShow(false)
+      setIdInputShow(false)
+      setLicenseInputShow(false)
+      setSaveButtonShow(false)
+      // give the form a moment to render then scroll down
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true })
+      }, 250)
+    }
   }, [personalInfoToEdit])
 
   useEffect(() => {
     if (personalInfoToEdit) {
       const { dateOfBirth } = personalInfoToEdit
-      if (dateOfBirthCount < 1) {
+      if (dateOfBirthCount < 1 && dateOfBirth) {
         const parsedBirthday = new Date(
           moment(dateOfBirth).format('YYYY-MM-DD')
         )
