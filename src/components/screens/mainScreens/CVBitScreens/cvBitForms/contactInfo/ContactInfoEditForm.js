@@ -69,7 +69,7 @@ const ContactInfoEditForm = () => {
 
   useEffect(() => {
     fetchPersonalInfo() // Fetch to get user's country
-  }, [])
+  }, [fetchPersonalInfo])
 
   useEffect(() => {
     if (error) toggleHideNavLinks(false)

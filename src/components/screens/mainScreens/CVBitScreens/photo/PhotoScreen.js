@@ -40,34 +40,47 @@ const PhotoScreen = () => {
 
   const { lastUpdate } = useRealTime()
   const lastRefreshTimestamp = useRef(null)
+  const fetchPhotosRef = useRef(fetchPhotos)
+  const assignPhotoRef = useRef(assignPhoto)
+  const setAssignedPhotoIdRef = useRef(setAssignedPhotoId)
+  
+  // Keep refs updated with latest functions
+  useEffect(() => {
+    fetchPhotosRef.current = fetchPhotos
+    assignPhotoRef.current = assignPhoto
+    setAssignedPhotoIdRef.current = setAssignedPhotoId
+  }, [fetchPhotos, assignPhoto, setAssignedPhotoId])
   
   useEffect(() => {
+    // Don't run auto-assign if we're in any loading state
+    if (loading || photoAssignLoading) return
+    
     if (photos && photos.length > 0) {
       const photoAssigned = photos.filter(ph => {
         return ph && ph.assigned === true && ph._id
       })
       if (photoAssigned.length > 0 && photoAssigned[0] && photoAssigned[0]._id) {
-        setAssignedPhotoId(photoAssigned[0]._id)
+        setAssignedPhotoIdRef.current(photoAssigned[0]._id)
         autoAssignAttempted.current = false // Reset if we find an assigned photo
-      } else if (!autoAssignAttempted.current && !photoAssignLoading) {
+      } else if (!autoAssignAttempted.current) {
         // If no photo is assigned and we haven't attempted yet, auto-assign the first photo
         const firstPhoto = photos.find(ph => ph && ph._id)
         if (firstPhoto && firstPhoto._id) {
           autoAssignAttempted.current = true
-          assignPhoto(firstPhoto._id)
+          assignPhotoRef.current(firstPhoto._id)
         }
       }
     }
-  }, [photos, photoAssignLoading])
+  }, [photos, photoAssignLoading, loading])
 
-  // Handle real-time updates
+  // Handle real-time updates - only run when lastUpdate changes, not when fetchPhotos changes
   useEffect(() => {
-    if (lastUpdate && lastUpdate.dataType === 'photo') {
-      // Skip if we're currently assigning a photo (local operation)
-      if (photoAssignLoading || loading) {
-        return
-      }
+    // Don't fetch if we're in any loading state or if photos haven't loaded yet
+    if (loading || photoAssignLoading || photos === null) {
+      return
+    }
 
+    if (lastUpdate && lastUpdate.dataType === 'photo') {
       const now = Date.now()
       if (
         lastRefreshTimestamp.current &&
@@ -78,10 +91,10 @@ const PhotoScreen = () => {
 
       lastRefreshTimestamp.current = now
       setTimeout(() => {
-        fetchPhotos()
+        fetchPhotosRef.current()
       }, 500)
     }
-  }, [lastUpdate, fetchPhotos, photoAssignLoading, loading])
+  }, [lastUpdate, photoAssignLoading, loading, photos])
 
   const handlePressUsePhoto = (data) => {
     if (data && data._id) {
@@ -107,7 +120,8 @@ const PhotoScreen = () => {
   }
 
   const renderList = () => {
-    if (loading || photos === null) return <LoaderFullScreen />
+    // Wait for all loading to complete before rendering
+    if (loading || photoAssignLoading || photos === null) return <LoaderFullScreen />
     if (photos.length < 1)
       return (
         <BitNoData
@@ -197,6 +211,8 @@ const PhotoScreen = () => {
       </>
     )
   }
+
+
 
   return (
     <>

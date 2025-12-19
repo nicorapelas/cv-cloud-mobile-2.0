@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView } from 'rea
 import { AntDesign } from '@expo/vector-icons'
 
 import { Context as UniversalContext } from '../../../context/UniversalContext'
+import { COUNTRIES } from '../../../utils/countryConfig'
 
 const OptionsModal = ({ bit, incomingValue, optionsArray, selected }) => {
   const [showModal, setShowModal] = useState(false)
@@ -67,35 +68,21 @@ const OptionsModal = ({ bit, incomingValue, optionsArray, selected }) => {
     }
   }
 
-  // Clear invalid values immediately when bit changes
+  // Clear invalid values when bit changes or when value becomes invalid
   useEffect(() => {
-    console.log('=== Cleanup useEffect (bit change) ===')
-    console.log('previousBitRef.current:', previousBitRef.current)
-    console.log('current bit:', bit)
-    console.log('optionsModalSelectedOption:', optionsModalSelectedOption)
-    
-    if (previousBitRef.current !== bit) {
-      console.log('Bit changed from', previousBitRef.current, 'to', bit)
-      // Bit changed - clear invalid values immediately
-      if (optionsModalSelectedOption) {
-        const isValid = isValidForCurrentBit(optionsModalSelectedOption)
-        console.log('isValid check result:', isValid)
-        if (!isValid) {
-          console.log('CLEARING invalid value:', optionsModalSelectedOption)
-          setOptionsModalSelectedOption(null)
-        }
-      }
+    const bitChanged = previousBitRef.current !== bit
+    if (bitChanged) {
       previousBitRef.current = bit
     }
-  }, [bit, optionsModalSelectedOption, setOptionsModalSelectedOption])
-
-  // Also clear when optionsModalSelectedOption changes and is invalid
-  useEffect(() => {
-    if (optionsModalSelectedOption && !isValidForCurrentBit(optionsModalSelectedOption)) {
-      setOptionsModalSelectedOption(null)
+    
+    // Clear invalid values if bit changed or if current value is invalid
+    if (optionsModalSelectedOption) {
+      const isValid = isValidForCurrentBit(optionsModalSelectedOption)
+      if (!isValid) {
+        setOptionsModalSelectedOption(null)
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [optionsModalSelectedOption])
+  }, [bit, optionsModalSelectedOption, setOptionsModalSelectedOption])
 
   useEffect(() => {
     if (bit === 'certificateType' && !incomingValue)
@@ -225,7 +212,11 @@ const OptionsModal = ({ bit, incomingValue, optionsArray, selected }) => {
           </ScrollView>
         )
       case 'country':
-        if (!optionsArray || optionsArray.length === 0) return null
+        // Backward compatibility: if optionsArray is not provided, use default country list
+        const countryOptions = optionsArray && optionsArray.length > 0
+          ? optionsArray
+          : COUNTRIES.map((country) => `${country.flag} ${country.name}`)
+        
         return (
           <ScrollView
             style={styles.optionsBedScroll}
@@ -233,7 +224,7 @@ const OptionsModal = ({ bit, incomingValue, optionsArray, selected }) => {
             showsVerticalScrollIndicator={false}
           >
             {renderOption('Clear Selection', null)}
-            {optionsArray.map((option, index) => {
+            {countryOptions.map((option, index) => {
               const isSelected = currentSelection === option
               return renderOption(option, option, isSelected)
             })}

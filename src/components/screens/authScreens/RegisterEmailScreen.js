@@ -969,7 +969,7 @@ const RegisterEmailScreen = () => {
   const renderContent = () => {
     if (loading) return <LoaderFullScreen />
     return (
-      <>
+      <View style={styles.rootContainer}>
         <KeyboardAvoidingView
           style={
             userPlanformOS === 'ios' && keyboard.keyboardShown === false
@@ -988,7 +988,7 @@ const RegisterEmailScreen = () => {
           </ScrollView>
         </KeyboardAvoidingView>
         {renderTermsModal()}
-      </>
+      </View>
     )
   }
 
@@ -996,6 +996,10 @@ const RegisterEmailScreen = () => {
 }
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+    backgroundColor: '#232936',
+  },
   bedIos: {
     backgroundColor: '#232936',
     width: '100%',

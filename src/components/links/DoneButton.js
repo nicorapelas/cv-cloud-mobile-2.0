@@ -34,6 +34,10 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#232936',
     justifyContent: 'center',
+    zIndex: 10, // Ensure button is above content
+    elevation: 10, // Android elevation
+    // NOTE: Parent ScrollViews must have contentContainerStyle with paddingBottom: 60
+    // to prevent this button from overlaying scrollable content
   },
   button: {
     backgroundColor: '#278acd',

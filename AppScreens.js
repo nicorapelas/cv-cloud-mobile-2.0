@@ -70,17 +70,22 @@ const AppScreens = () => {
       // Always animate the transition for better UX
       setSlideDirection(determineSlideDirection(screenSelected))
       setNextScreen(screenSelected)
-      Animated.timing(animatedValue, {
+      const animation = Animated.timing(animatedValue, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
-      }).start(() => {
+      })
+      animation.start(() => {
         setCurrentScreen(screenSelected)
         setNextScreen(null)
         animatedValue.setValue(0)
       })
+      // Cleanup: stop animation if component unmounts or dependencies change
+      return () => {
+        animation.stop()
+      }
     }
-  }, [screenSelected, currentScreen])
+  }, [screenSelected, currentScreen, animatedValue])
 
   const determineSlideDirection = (nextScreen) => {
     const screenOrder = [

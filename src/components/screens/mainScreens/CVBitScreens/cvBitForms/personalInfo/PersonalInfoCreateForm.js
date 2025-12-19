@@ -105,25 +105,23 @@ const PersonalInfoCreateForm = ({
     console.log('PersonalInfoCreateForm: Country state changed to:', country)
   }, [country])
 
-  // Update saCitizen when country changes: true for ZA, false for others
-  useEffect(() => {
-    if (country === 'ZA') {
-      setSaCitizen(true)
-    } else {
-      setSaCitizen(false)
-    }
-  }, [country])
-
   useEffect(() => {
     if (error) toggleHideNavLinks(false)
   }, [error])
 
+  // Update saCitizen: incoming value takes precedence, otherwise set based on country
   useEffect(() => {
-    // Only override with incoming value if it's explicitly set
     if (incomingSaCitizen !== undefined) {
+      // Incoming value takes precedence
       setSaCitizen(incomingSaCitizen)
+    } else if (country === 'ZA') {
+      // Only set based on country if no incoming value is provided
+      setSaCitizen(true)
+    } else if (country) {
+      // Only set to false if country is set and not ZA
+      setSaCitizen(false)
     }
-  }, [incomingSaCitizen])
+  }, [country, incomingSaCitizen])
 
   const keyboard = useKeyboard()
 

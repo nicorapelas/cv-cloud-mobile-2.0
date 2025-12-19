@@ -67,7 +67,7 @@ const ContactInfoCreateForm = () => {
 
   useEffect(() => {
     fetchPersonalInfo() // Fetch to get user's country
-  }, [])
+  }, [fetchPersonalInfo])
 
   const keyboard = useKeyboard()
 

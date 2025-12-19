@@ -272,9 +272,9 @@ const CertificatePhotoUploadScreen = () => {
   const renderContent = () => {
     if (loading) return <LoaderFullScreen />
     if (cameraPermissionStatus === false)
-      return <PhotoPermissions bit="camera" />
+      return <PhotoPermissions bit="camera" routeName="certificate" />
     if (galleryPermissionStatus === false)
-      return <PhotoPermissions bit="gallery" />
+      return <PhotoPermissions bit="gallery" routeName="certificate" />
     return (
       <>
         <View style={styles.bed}>

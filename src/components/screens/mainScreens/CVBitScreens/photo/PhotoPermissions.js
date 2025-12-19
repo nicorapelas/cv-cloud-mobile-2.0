@@ -1,8 +1,10 @@
-import React from 'react'
-import { View, Text, Platform, StyleSheet } from 'react-native'
-import { FontAwesome } from '@expo/vector-icons'
+import React, { useContext } from 'react'
+import { View, Text, Platform, StyleSheet, TouchableOpacity } from 'react-native'
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons'
+import { Context as NavContext } from '../../../../../context/NavContext'
 
-const PhotoPermissions = ({ bit }) => {
+const PhotoPermissions = ({ bit, routeName = 'photo' }) => {
+  const { setCVBitScreenSelected } = useContext(NavContext)
   const noCameraPermissions = () => {
     return (
       <View style={styles.noPermissionsBed}>
@@ -116,7 +118,20 @@ const PhotoPermissions = ({ bit }) => {
     return null
   }
 
-  return renderContent()
+  return (
+    <>
+      {renderContent()}
+      <View style={styles.closeButtonBed}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => setCVBitScreenSelected(routeName)}
+        >
+          <MaterialIcons name="arrow-back" style={styles.closeIcon} />
+          <Text style={styles.closeText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -164,6 +179,38 @@ const styles = StyleSheet.create({
     color: '#f9b321',
     fontSize: 14,
     marginBottom: 7,
+  },
+  closeButtonBed: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#232936',
+    justifyContent: 'center',
+    zIndex: 10,
+    elevation: 10,
+  },
+  closeButton: {
+    backgroundColor: '#278acd',
+    borderColor: '#ffff',
+    borderWidth: 2,
+    borderRadius: 5,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    paddingVertical: 10,
+    marginVertical: 5,
+  },
+  closeIcon: {
+    color: '#ffff',
+    fontSize: 16,
+    marginTop: 2,
+    marginRight: 5,
+  },
+  closeText: {
+    color: '#ffff',
+    fontSize: 16,
   },
 })
 
