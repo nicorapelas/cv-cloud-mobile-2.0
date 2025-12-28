@@ -40,6 +40,8 @@ import { Context as ReferenceContext } from '../../../../context/ReferenceContex
 import { Context as SecondEduContext } from '../../../../context/SecondEduContext'
 import { Context as SkillContext } from '../../../../context/SkillContext'
 import { Context as TertEduContext } from '../../../../context/TertEduContext'
+import { Context as UniversalContext } from '../../../../context/UniversalContext'
+import ngrokApi from '../../../../api/ngrok'
 
 const ViewCVScreen = () => {
   const [zoom, setZoom] = useState('zoomedOut')
@@ -138,6 +140,12 @@ const ViewCVScreen = () => {
   } = useContext(PhotoContext)
 
   const {
+    state: { shareCVAssignedPhotoUrl, curriculumVitaeID },
+    setShareCVPhotoUrl,
+    clearShareCVPhotoUrl,
+  } = useContext(UniversalContext)
+
+  const {
     state: { loading: loadingReference, references, referenceSample },
     fetchReferenceSample,
   } = useContext(ReferenceContext)
@@ -180,6 +188,13 @@ const ViewCVScreen = () => {
     fetchSkillSample()
     fetchSkills()
     fetchTertEduSample()
+  }, [])
+
+  // Clear ShareCV photo URL when viewing your own CV
+  // ShareCV's assignedPhotoUrl should only be used when viewing a shared CV via API response
+  useEffect(() => {
+    // Clear any previously set ShareCV photo URL since this is for viewing your own CV
+    clearShareCVPhotoUrl()
   }, [])
 
   const userRedirect = () => {
@@ -287,9 +302,14 @@ const ViewCVScreen = () => {
 
   // Template rendering function
   const renderTemplate = () => {
+    // For viewing your own CV: use current assigned photo
+    // For viewing shared CVs: shareCVAssignedPhotoUrl will be set from API response
+    // Priority: ShareCV photo (if viewing shared CV) > current assigned photo
+    const photoUrlToUse = shareCVAssignedPhotoUrl || assignedPhotoUrl
+    
     const templateProps = {
       // Data props
-      assignedPhotoUrl,
+      assignedPhotoUrl: photoUrlToUse,
       assignedPhotoUrlSample,
       contactInfo,
       contactInfoSample,

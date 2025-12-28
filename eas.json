@@ -22,6 +22,16 @@
         "simulator": true
       }
     },
+    "closed-testing": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    },
     "production": {
       "android": {
         "buildType": "app-bundle",

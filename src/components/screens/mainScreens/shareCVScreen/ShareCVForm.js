@@ -30,6 +30,7 @@ import { Context as PhotoContext } from '../../../../context/PhotoContext'
 import { Context as PersonalInfoContext } from '../../../../context/PersonalInfoContext'
 import { Context as UniversalContext } from '../../../../context/UniversalContext'
 import { Context as NavContext } from '../../../../context/NavContext'
+import ngrokApi from '../../../../api/ngrok'
 
 const ShareCVForm = () => {
   const [subject, setSubject] = useState(
@@ -73,6 +74,7 @@ const ShareCVForm = () => {
   const { setNavTabSelected, setCVBitScreenSelected } = useContext(NavContext)
 
   useEffect(() => {
+    // Always fetch fresh data when form opens to ensure we have the latest assigned photo
     fetchAssignedPhoto()
     fetchCV_ID()
     fetchPersonalInfo()
@@ -80,8 +82,8 @@ const ShareCVForm = () => {
 
   // Update subject line and message when personal info loads
   useEffect(() => {
-    if (personalInfo && personalInfo.fullName) {
-      const fullName = personalInfo.fullName
+    if (personalInfo && personalInfo.length > 0 && personalInfo[0]?.fullName) {
+      const fullName = personalInfo[0].fullName
       const defaultMessage = `Dear Hiring Manager,
 
 I am writing to express my interest in potential opportunities within your organization. Please find my CV attached for your review.
@@ -95,9 +97,10 @@ ${fullName}`
 
       setSubject(`CV Application - ${fullName}`)
       // Only set default message if user hasn't typed anything yet
-      if (message === '') {
-        setMessage(defaultMessage)
-      }
+      setMessage((currentMessage) => {
+        // Only set default if message is empty
+        return currentMessage === '' ? defaultMessage : currentMessage
+      })
     }
   }, [personalInfo])
 
@@ -114,7 +117,7 @@ ${fullName}`
       const timer = setTimeout(() => {
         setSentMessage(false)
         // Reset to default values (will be updated by personalInfo effect)
-        const fullName = personalInfo?.fullName || ''
+        const fullName = personalInfo && personalInfo.length > 0 ? personalInfo[0]?.fullName || '' : ''
         setSubject(
           fullName
             ? `CV Application - ${fullName}`
@@ -183,7 +186,7 @@ ${fullName}`
             onPress={() => {
               setSentMessage(false)
               // Reset to default values
-              const fullName = personalInfo?.fullName || ''
+              const fullName = personalInfo && personalInfo.length > 0 ? personalInfo[0]?.fullName || '' : ''
               setSubject(
                 fullName
                   ? `CV Application - ${fullName}`
@@ -666,13 +669,6 @@ ${fullName}`
   }
 
   const sendButton = () => {
-    const formValues = {
-      curriculumVitaeID,
-      subject,
-      assignedPhotoUrl,
-      message,
-      recipients: recipientArray,
-    }
     return (
       <View style={styles.nextBackButtonsBed}>
         <TouchableOpacity
@@ -698,12 +694,41 @@ ${fullName}`
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.shareButtonContainer}
-          onPress={() => {
+          onPress={async () => {
             toggleHideNavLinks(true)
+            // Fetch the latest assigned photo directly from API to ensure we have the most current one
+            let currentAssignedPhotoUrl = assignedPhotoUrl
+            try {
+              const photoResponse = await ngrokApi.get('/api/photo/assigned')
+              // The API returns the photoUrl string directly, not an object
+              // It can also return 'noneAssigned' if no photo is assigned
+              if (photoResponse.data && 
+                  typeof photoResponse.data === 'string' && 
+                  photoResponse.data.trim() !== '' && 
+                  photoResponse.data !== 'noneAssigned') {
+                currentAssignedPhotoUrl = photoResponse.data
+                console.log('✅ Using latest assigned photo from API:', currentAssignedPhotoUrl)
+              } else {
+                console.log('⚠️ No valid assigned photo from API, using context value')
+              }
+            } catch (error) {
+              // If fetch fails, use the photo from context
+              console.log('❌ Could not fetch latest assigned photo, using context value:', error.message)
+            }
+            
+            console.log('📤 Sharing CV with assignedPhotoUrl:', currentAssignedPhotoUrl)
+            
+            const formValues = {
+              curriculumVitaeID,
+              subject,
+              assignedPhotoUrl: currentAssignedPhotoUrl,
+              message,
+              recipients: recipientArray,
+            }
             createShareCV(formValues, () => {
               setSentMessage(true)
               // Reset to default values
-              const fullName = personalInfo?.fullName || ''
+              const fullName = personalInfo && personalInfo.length > 0 ? personalInfo[0]?.fullName || '' : ''
               setSubject(
                 fullName
                   ? `CV Application - ${fullName}`

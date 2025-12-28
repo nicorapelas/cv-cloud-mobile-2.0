@@ -1,10 +1,19 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-  <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+  <!-- TEMPORARY TEST: Changed from DayNight to Light to force light mode for crop screen -->
+  <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
     <item name="android:enforceNavigationBarContrast" tools:targetApi="29">true</item>
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="android:statusBarColor">#232936</item>
     <item name="android:windowBackground">@color/activityBackground</item>
+  </style>
+  <!-- Light theme variant for image picker and other activities that need white background -->
+  <style name="AppTheme.Light" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="android:enforceNavigationBarContrast" tools:targetApi="29">true</item>
+    <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="android:statusBarColor">#232936</item>
+    <item name="android:windowBackground">@color/white</item>
   </style>
   <style name="Theme.App.SplashScreen" parent="AppTheme">
     <item name="android:windowBackground">@drawable/ic_launcher_background</item>

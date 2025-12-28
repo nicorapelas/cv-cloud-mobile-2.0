@@ -44,6 +44,10 @@ const UniversalReducer = (state, action) => {
       return { ...state, [action.payload._id]: action.payload }
     case 'FETCH_CV_ID':
       return { ...state, curriculumVitaeID: action.payload, loading: false }
+    case 'SET_SHARE_CV_PHOTO_URL':
+      return { ...state, shareCVAssignedPhotoUrl: action.payload }
+    case 'CLEAR_SHARE_CV_PHOTO_URL':
+      return { ...state, shareCVAssignedPhotoUrl: null }
     case 'HIDE_NAV_LINKS':
       return { ...state, hideNaveLink: action.payload }
     case 'TOGGLE_INSTRUCTION_MODAL':
@@ -281,6 +285,14 @@ const setInitDataFetchDone = (dispatch) => (value) => {
   dispatch({ type: 'SET_INIT_DATA_FETCH_DONE', payload: value })
 }
 
+const setShareCVPhotoUrl = (dispatch) => (photoUrl) => {
+  dispatch({ type: 'SET_SHARE_CV_PHOTO_URL', payload: photoUrl })
+}
+
+const clearShareCVPhotoUrl = (dispatch) => () => {
+  dispatch({ type: 'CLEAR_SHARE_CV_PHOTO_URL' })
+}
+
 export const { Context, Provider } = createDataContext(
   UniversalReducer,
   {
@@ -319,6 +331,8 @@ export const { Context, Provider } = createDataContext(
     setYearSelected,
     setImageToViewUrl,
     setInitDataFetchDone,
+    setShareCVPhotoUrl,
+    clearShareCVPhotoUrl,
   },
   // Initial state
   {
@@ -352,5 +366,6 @@ export const { Context, Provider } = createDataContext(
     yearSelected: null,
     imageToViewUrl: null,
     initDataFetchDone: false,
+    shareCVAssignedPhotoUrl: null,
   }
 )
