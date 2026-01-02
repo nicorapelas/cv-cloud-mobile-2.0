@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import {
   View,
   Text,
@@ -39,6 +39,12 @@ const LoginEmailScreen = () => {
   } = useContext(UniversalContext)
 
   const keyboard = useKeyboard()
+
+  // Clear messages when component mounts
+  useEffect(() => {
+    clearApiMessage()
+    clearErrorMessage()
+  }, [])
 
   const renderWarnMessage = () => {
     if (!errorMessage || apiMessage) return null

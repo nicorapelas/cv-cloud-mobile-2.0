@@ -21,11 +21,12 @@ import ModalLink from '../../links/ModalLink'
 const RegisterOrLoginScreen = ({ navigation }) => {
   const [code, setCode] = useState(null)
   const [intro, setIntro] = useState(null)
-  const [delayed, setDelayed] = useState(false)
 
   const {
     state: { loading, apiMessage },
     setIntroAffiliateCode,
+    clearApiMessage,
+    clearErrorMessage,
   } = useContext(AuthContext)
 
   const { setScreenSelected } = useContext(NavContext)
@@ -34,12 +35,10 @@ const RegisterOrLoginScreen = ({ navigation }) => {
     state: { userPlanformOS },
   } = useContext(UniversalContext)
 
+  // Clear any error/API messages when component mounts
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDelayed(true)
-    }, 2000)
-
-    return () => clearTimeout(timer)
+    clearApiMessage()
+    clearErrorMessage()
   }, [])
 
   const renderApiMessage = () => {
@@ -90,15 +89,19 @@ const RegisterOrLoginScreen = ({ navigation }) => {
   }
 
   const handlePressSignup = () => {
+    clearApiMessage()
+    clearErrorMessage()
     setScreenSelected('registerEmail')
   }
 
   const handlePressLogin = () => {
+    clearApiMessage()
+    clearErrorMessage()
     setScreenSelected('loginEmail')
   }
 
   const renderContent = () => {
-    if (loading || !delayed) return <LoaderFullScreen />
+    if (loading) return <LoaderFullScreen />
     return (
       <View
         style={userPlanformOS === 'ios' ? styles.bedIos : styles.bedAndroid}

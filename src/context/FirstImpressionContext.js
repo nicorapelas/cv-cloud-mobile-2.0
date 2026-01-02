@@ -7,6 +7,8 @@ const FirstImpressionReducer = (state, action) => {
   switch (action.type) {
     case 'LOADING':
       return { ...state, loading: true }
+    case 'STOP_LOADING':
+      return { ...state, loading: false }
     case 'ADD_ERROR':
       return { ...state, error: action.payload, loading: false }
     case 'ADD_UPLOAD_SIGNATURE':
@@ -129,15 +131,30 @@ const createFirstImpression = (dispatch) => async (videoData, callback) => {
 }
 
 const deleteFirstImpression = (dispatch) => async (videoData) => {
+  console.log('[First Impression Context] Delete request started:', videoData)
   dispatch({ type: 'LOADING' })
   try {
+    console.log('[First Impression Context] Sending delete request to server...')
     const response = await ngrokApi.post(
       `/api/first-impression/delete`,
       videoData
     )
+    console.log('[First Impression Context] Delete response received:', response.data)
+    
+    if (response.data?.error) {
+      console.log('[First Impression Context] ❌ ERROR: Server returned error:', response.data.error)
+      dispatch({ type: 'ADD_ERROR', payload: response.data.error })
+      return
+    }
+    
+    console.log('[First Impression Context] ✅ Delete successful, updating state...')
     dispatch({ type: 'DELETE', payload: response.data })
     return
   } catch (error) {
+    console.log('[First Impression Context] ❌ ERROR: Exception during delete:', error)
+    console.log('[First Impression Context] Error message:', error.message)
+    dispatch({ type: 'ADD_ERROR', payload: 'Failed to delete first impression: ' + (error.message || 'Unknown error') })
+    dispatch({ type: 'STOP_LOADING' })
     await ngrokApi.post('/error', { error: error })
     return
   }

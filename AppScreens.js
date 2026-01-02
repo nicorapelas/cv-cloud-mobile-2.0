@@ -1,5 +1,5 @@
-import React, { useContext, useState, useEffect, useRef, useMemo } from 'react'
-import { View, StyleSheet, Animated, Dimensions, Platform } from 'react-native'
+import React, { useContext, useState, useEffect } from 'react'
+import { View, StyleSheet, Dimensions, Platform } from 'react-native'
 
 import { Context as NavContext } from './src/context/NavContext'
 import { Context as AuthContext } from './src/context/AuthContext'
@@ -29,10 +29,17 @@ const AppScreens = () => {
 
   const { fetchSystemSettings } = useContext(AdvertisementContext)
 
-  const [currentScreen, setCurrentScreen] = useState(screenSelected)
-  const [nextScreen, setNextScreen] = useState(null)
-  const [slideDirection, setSlideDirection] = useState('left')
-  const animatedValue = useRef(new Animated.Value(0)).current
+  // Valid auth screens
+  const validAuthScreens = ['registerOrLogin', 'registerEmail', 'loginEmail', 'passwordForgot']
+  
+  // Ensure screenSelected is always valid
+  const getValidScreen = (screen) => {
+    if (!screen || !validAuthScreens.includes(screen)) {
+      return 'registerOrLogin'
+    }
+    return screen
+  }
+
   const [fetchUserCount, setFetchUserCount] = useState(0)
 
   useEffect(() => {
@@ -58,49 +65,10 @@ const AppScreens = () => {
     }
   }, [user])
 
-  // Sync currentScreen with screenSelected on mount
-  useEffect(() => {
-    if (currentScreen !== screenSelected && !nextScreen) {
-      setCurrentScreen(screenSelected)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (screenSelected !== currentScreen && screenSelected) {
-      // Always animate the transition for better UX
-      setSlideDirection(determineSlideDirection(screenSelected))
-      setNextScreen(screenSelected)
-      const animation = Animated.timing(animatedValue, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      })
-      animation.start(() => {
-        setCurrentScreen(screenSelected)
-        setNextScreen(null)
-        animatedValue.setValue(0)
-      })
-      // Cleanup: stop animation if component unmounts or dependencies change
-      return () => {
-        animation.stop()
-      }
-    }
-  }, [screenSelected, currentScreen, animatedValue])
-
-  const determineSlideDirection = (nextScreen) => {
-    const screenOrder = [
-      'registerOrLogin',
-      'registerEmail',
-      'loginEmail',
-      'passwordForgot',
-    ]
-    const currentIndex = screenOrder.indexOf(currentScreen)
-    const nextIndex = screenOrder.indexOf(nextScreen)
-    return nextIndex > currentIndex ? 'left' : 'right'
-  }
 
   const initialScreenSelector = (screen) => {
-    switch (screen) {
+    const validScreen = getValidScreen(screen)
+    switch (validScreen) {
       case 'registerOrLogin':
         return <RegisterOrLoginScreen />
       case 'registerEmail':
@@ -110,7 +78,8 @@ const AppScreens = () => {
       case 'passwordForgot':
         return <PasswordForgotScreen />
       default:
-        return null
+        // Fallback to registerOrLogin if somehow invalid
+        return <RegisterOrLoginScreen />
     }
   }
 
@@ -130,61 +99,14 @@ const AppScreens = () => {
       : initialScreenSelector(screen)
   }
 
-  const currentScreenStyle = {
-    transform: [
-      {
-        translateX: animatedValue.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, slideDirection === 'left' ? -width : width],
-        }),
-      },
-    ],
-  }
-
-  const nextScreenStyle = {
-    transform: [
-      {
-        translateX: animatedValue.interpolate({
-          inputRange: [0, 1],
-          outputRange: [slideDirection === 'left' ? width : -width, 0],
-        }),
-      },
-    ],
-  }
-
-  const memoizedCurrentScreen = useMemo(
-    () => screenSelector(currentScreen),
-    [currentScreen, token]
-  )
-  const memoizedNextScreen = useMemo(
-    () => screenSelector(nextScreen),
-    [nextScreen, token]
-  )
+  // Get the current screen to render - simple and direct, no animations
+  const currentScreenToRender = getValidScreen(screenSelected)
 
   return (
     <View style={styles.container}>
-      {memoizedCurrentScreen && (
-        <Animated.View
-          style={[styles.screenContainer, currentScreenStyle]}
-          pointerEvents="box-none"
-        >
-          {memoizedCurrentScreen}
-        </Animated.View>
-      )}
-      {nextScreen && memoizedNextScreen && (
-        <Animated.View
-          style={[styles.screenContainer, nextScreenStyle]}
-          pointerEvents="box-none"
-        >
-          {memoizedNextScreen}
-        </Animated.View>
-      )}
-      {/* Fallback: render directly from screenSelected if nothing is rendered */}
-      {!memoizedCurrentScreen && !memoizedNextScreen && (
-        <View style={styles.screenContainer}>
-          {screenSelector(screenSelected)}
-        </View>
-      )}
+      <View style={styles.screenContainer}>
+        {screenSelector(currentScreenToRender)}
+      </View>
     </View>
   )
 }

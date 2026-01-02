@@ -85,11 +85,20 @@ const VideoPlayerRetake = ({ firstImpression }) => {
     )
   }
 
+  // Log first impression data for debugging
+  useEffect(() => {
+    console.log('[VideoPlayerRetake] First impression data:', {
+      id: firstImpression?._id,
+      publicId: firstImpression?.publicId,
+      hasVideoUrl: !!firstImpression?.videoUrl,
+    })
+  }, [firstImpression])
+
   return (
     <>
       <DeleteModal
         id={firstImpression._id}
-        publicId={firstImpression.publicId}
+        publicId={firstImpression?.publicId || null}
         bit="first impression"
       />
       {renderContent()}

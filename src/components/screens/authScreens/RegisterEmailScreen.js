@@ -28,6 +28,7 @@ const RegisterEmailScreen = () => {
     state: { loading, errorMessage, apiMessage, introAffiliateCode },
     register,
     clearErrorMessage,
+    clearApiMessage,
   } = useContext(AuthContext)
 
   const {
@@ -57,6 +58,12 @@ const RegisterEmailScreen = () => {
   }, [fullName, email, password, password2, termsAccepted])
 
   const keyboard = useKeyboard()
+
+  // Clear messages when component mounts
+  useEffect(() => {
+    clearApiMessage()
+    clearErrorMessage()
+  }, [])
 
   const validateEmail = () => {
     const { errors, isValid } = validateEmailInput(email)

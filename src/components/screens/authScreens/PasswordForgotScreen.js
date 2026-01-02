@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import {
   View,
   Text,
@@ -32,6 +32,12 @@ const PasswordForgotScreen = () => {
   } = useContext(UniversalContext)
 
   const keyboard = useKeyboard()
+
+  // Clear messages when component mounts
+  useEffect(() => {
+    clearApiMessage()
+    clearErrorMessage()
+  }, [])
 
   const renderSuccess = () => {
     if (!apiMessage) return null
