@@ -63,6 +63,7 @@ const Template06 = ({
     tertEdus: showSample ? tertEduSample : tertEdus,
   }
 
+
   // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -168,7 +169,7 @@ const Template06 = ({
                       {data.personalInfo?.fullName || 'PROFESSIONAL PROFILE'}
                     </Text>
                     <Text style={currentStyles.subheadline}>
-                      {data.personalSummary?.summary ||
+                      {data.personalSummary?.content ||
                         'Experienced Professional Seeking New Opportunities'}
                     </Text>
                   </View>
@@ -218,10 +219,13 @@ const Template06 = ({
                             Location:
                           </Text>{' '}
                           {[
+                            data.contactInfo?.complex,
                             data.contactInfo?.address,
+                            data.contactInfo?.unit,
                             data.contactInfo?.suburb,
                             data.contactInfo?.city,
                             data.contactInfo?.province,
+                            data.contactInfo?.postalCode,
                             data.contactInfo?.country,
                           ]
                             .filter(Boolean)
@@ -229,14 +233,13 @@ const Template06 = ({
                         </Text>
                       </View>
                     )}
-                  </View>
                 </View>
 
                 {/* Personal Information Section */}
                 {data.personalInfo && (
                   <View style={currentStyles.section}>
                     <View style={currentStyles.sectionHeader}>
-                      <Text style={currentStyles.sectionTitle}>
+                      <Text style={currentStyles.sectionTitleInHeader}>
                         PERSONAL DETAILS
                       </Text>
                     </View>
@@ -245,40 +248,72 @@ const Template06 = ({
                         {data.personalInfo?.dateOfBirth && (
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalLabel}>
-                              Date of Birth:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {formatDate(data.personalInfo.dateOfBirth)}
+                              Date of Birth:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {moment(data.personalInfo.dateOfBirth).format(
+                                  'MMMM D, YYYY'
+                                )}
+                              </Text>
                             </Text>
                           </View>
                         )}
                         {data.personalInfo?.nationality && (
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalLabel}>
-                              Nationality:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.nationality}
+                              Nationality:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.nationality}
+                              </Text>
                             </Text>
                           </View>
                         )}
                         {data.personalInfo?.gender && (
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalLabel}>
-                              Gender:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.gender}
+                              Gender:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.gender}
+                              </Text>
                             </Text>
                           </View>
                         )}
                         {data.personalInfo?.driversLicense && (
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalLabel}>
-                              Driver's License:
+                              Driver's License:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.licenseCode || 'Valid'}
+                              </Text>
                             </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.licenseCode || 'Valid'}
+                          </View>
+                        )}
+                        {data.personalInfo?.idNumber && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalLabel}>
+                              ID Number:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.idNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo?.ppNumber && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalLabel}>
+                              Passport Number:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.ppNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo?.saCitizen && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalLabel}>
+                              SA Citizen:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                Yes
+                              </Text>
                             </Text>
                           </View>
                         )}
@@ -287,46 +322,8 @@ const Template06 = ({
                   </View>
                 )}
 
-                {/* Two Column Layout */}
-                <View style={currentStyles.columns}>
-                  {/* Left Column */}
-                  <View style={currentStyles.leftColumn}>
-                    {/* Professional Summary */}
-                    {data.personalSummary?.summary && (
-                      <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>
-                          PROFESSIONAL SUMMARY
-                        </Text>
-                        <Text style={currentStyles.summaryText}>
-                          {data.personalSummary.summary}
-                        </Text>
-                      </View>
-                    )}
-
-                    {/* Work Experience */}
-                    {data.experiences && data.experiences.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>
-                          WORK EXPERIENCE
-                        </Text>
-                        {data.experiences.map((experience, index) => (
-                          <View
-                            key={index}
-                            style={currentStyles.experienceItem}
-                          >
-                            <Text style={currentStyles.experienceTitle}>
-                              {experience.title}
-                            </Text>
-                            {experience.description && (
-                              <Text style={currentStyles.experienceDescription}>
-                                {experience.description}
-                              </Text>
-                            )}
-                          </View>
-                        ))}
-                      </View>
-                    )}
-
+                {/* Main Content */}
+                <View style={currentStyles.mainContent}>
                     {/* Employment History */}
                     {data.employHistorys && data.employHistorys.length > 0 && (
                       <View style={currentStyles.section}>
@@ -346,10 +343,10 @@ const Template06 = ({
                                 {employment.company}
                               </Text>
                               <Text style={currentStyles.employmentDates}>
-                                {employment.startDate} -{' '}
-                                {employment.current
-                                  ? 'Present'
-                                  : employment.endDate}
+                                {formatDate(employment.startDate)} -{' '}
+                                {employment.endDate
+                                  ? formatDate(employment.endDate)
+                                  : 'Present'}
                               </Text>
                             </View>
                             {employment.description && (
@@ -361,84 +358,47 @@ const Template06 = ({
                         ))}
                       </View>
                     )}
-                  </View>
 
-                  {/* Right Column */}
-                  <View style={currentStyles.rightColumn}>
-                    {/* Skills */}
-                    {data.skills && data.skills.length > 0 && (
+                    {/* Experience */}
+                    {data.experiences && data.experiences.length > 0 && (
                       <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>SKILLS</Text>
-                        {data.skills.map((skill, index) => (
-                          <View key={index} style={currentStyles.skillItem}>
-                            <Text style={currentStyles.skillName}>
-                              {skill.skill}
-                            </Text>
-                            {renderProficiency(skill.proficiency)}
+                        <Text style={currentStyles.sectionTitle}>
+                          EXPERIENCE
+                        </Text>
+                        {data.experiences.map((experience, index) => (
+                          <View
+                            key={index}
+                            style={currentStyles.experienceItem}
+                          >
+                            <View style={currentStyles.employmentHeader}>
+                              <Text style={currentStyles.experienceTitle}>
+                                {experience.title}
+                              </Text>
+                              {experience.company && (
+                                <Text style={currentStyles.employmentCompany}>
+                                  {experience.company}
+                                </Text>
+                              )}
+                              {experience.startDate && (
+                                <Text style={currentStyles.employmentDates}>
+                                  {formatDate(experience.startDate)} -{' '}
+                                  {experience.endDate
+                                    ? formatDate(experience.endDate)
+                                    : 'Present'}
+                                </Text>
+                              )}
+                            </View>
+                            {experience.description && (
+                              <Text style={currentStyles.experienceDescription}>
+                                {experience.description}
+                              </Text>
+                            )}
                           </View>
                         ))}
                       </View>
                     )}
-
-                    {/* Languages */}
-                    {data.languages && data.languages.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>
-                          LANGUAGES
-                        </Text>
-                        {data.languages.map((language, index) => (
-                          <View key={index} style={currentStyles.languageItem}>
-                            <Text style={currentStyles.languageName}>
-                              {language.language}
-                            </Text>
-                            <Text style={currentStyles.languageProficiency}>
-                              Read: {language.read}/5 | Write: {language.write}
-                              /5 | Speak: {language.speak}/5
-                            </Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Personal Attributes */}
-                    {data.attributes && data.attributes.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>
-                          PERSONAL ATTRIBUTES
-                        </Text>
-                        <View style={currentStyles.attributesGrid}>
-                          {data.attributes.map((attribute, index) => (
-                            <View
-                              key={index}
-                              style={currentStyles.attributeTag}
-                            >
-                              <Text style={currentStyles.attributeText}>
-                                {attribute.attribute}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Interests */}
-                    {data.interests && data.interests.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <Text style={currentStyles.sectionTitle}>
-                          INTERESTS
-                        </Text>
-                        <View style={currentStyles.interestsGrid}>
-                          {data.interests.map((interest, index) => (
-                            <View key={index} style={currentStyles.interestTag}>
-                              <Text style={currentStyles.interestText}>
-                                {interest.interest}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    )}
                   </View>
+
                 </View>
 
                 {/* Education Section */}
@@ -446,7 +406,7 @@ const Template06 = ({
                 (data.secondEdu && data.secondEdu.length > 0) ? (
                   <View style={currentStyles.section}>
                     <View style={currentStyles.sectionHeader}>
-                      <Text style={currentStyles.sectionTitle}>EDUCATION</Text>
+                      <Text style={currentStyles.sectionTitleInHeader}>EDUCATION</Text>
                     </View>
                     <View style={currentStyles.sectionContent}>
                       {/* Tertiary Education */}
@@ -455,7 +415,8 @@ const Template06 = ({
                           <View key={index} style={currentStyles.item}>
                             <View style={currentStyles.itemHeader}>
                               <Text style={currentStyles.itemTitle}>
-                                {education.qualification}
+                                {education.certificationType} -{' '}
+                                {education.instituteName}
                               </Text>
                               <Text style={currentStyles.itemDate}>
                                 {formatDate(education.startDate)} -{' '}
@@ -464,12 +425,14 @@ const Template06 = ({
                                   : 'Present'}
                               </Text>
                             </View>
-                            <Text style={currentStyles.itemSubtitle}>
-                              {education.institution}
-                            </Text>
-                            {education.subjects && (
+                            {education.description && (
+                              <Text style={currentStyles.itemSubtitle}>
+                                {education.description}
+                              </Text>
+                            )}
+                            {education.additionalInfo && (
                               <Text style={currentStyles.itemDescription}>
-                                Subjects: {renderSubjects(education.subjects)}
+                                {education.additionalInfo}
                               </Text>
                             )}
                           </View>
@@ -481,7 +444,7 @@ const Template06 = ({
                           <View key={index} style={currentStyles.item}>
                             <View style={currentStyles.itemHeader}>
                               <Text style={currentStyles.itemTitle}>
-                                {education.qualification}
+                                {education.schoolName}
                               </Text>
                               <Text style={currentStyles.itemDate}>
                                 {formatDate(education.startDate)} -{' '}
@@ -490,12 +453,15 @@ const Template06 = ({
                                   : 'Present'}
                               </Text>
                             </View>
-                            <Text style={currentStyles.itemSubtitle}>
-                              {education.institution}
-                            </Text>
-                            {education.subjects && (
+                            {education.subjects && education.subjects.length > 0 && (
                               <Text style={currentStyles.itemDescription}>
-                                Subjects: {renderSubjects(education.subjects)}
+                                Subjects:{' '}
+                                {renderSubjects(education.subjects)}
+                              </Text>
+                            )}
+                            {education.additionalInfo && (
+                              <Text style={currentStyles.itemDescription}>
+                                {education.additionalInfo}
                               </Text>
                             )}
                           </View>
@@ -504,22 +470,117 @@ const Template06 = ({
                   </View>
                 ) : null}
 
-                {/* Interests Section */}
-                {data.interests && data.interests.length > 0 && (
+                {/* Skills, Languages, Interests & Attributes - Combined Section */}
+                {(data.skills?.length > 0 ||
+                  data.languages?.length > 0 ||
+                  data.interests?.length > 0 ||
+                  data.attributes?.length > 0) && (
                   <View style={currentStyles.section}>
                     <View style={currentStyles.sectionHeader}>
-                      <Text style={currentStyles.sectionIcon}>🎯</Text>
-                      <Text style={currentStyles.sectionTitle}>INTERESTS</Text>
+                      <Text style={currentStyles.sectionTitleInHeader}>
+                        SKILLS, LANGUAGES, INTERESTS & ATTRIBUTES
+                      </Text>
                     </View>
                     <View style={currentStyles.sectionContent}>
-                      <View style={currentStyles.interestsGrid}>
-                        {data.interests.map((interest, index) => (
-                          <View key={index} style={currentStyles.interestTag}>
-                            <Text style={currentStyles.interestText}>
-                              {interest.interest}
-                            </Text>
-                          </View>
-                        ))}
+                      <View style={currentStyles.twoColumnContainer}>
+                        {/* Left Column: Skills & Languages */}
+                        <View style={currentStyles.leftSubColumn}>
+                          {/* Skills */}
+                          {data.skills && data.skills.length > 0 && (
+                            <View style={currentStyles.subSection}>
+                              <Text style={currentStyles.subSectionTitle}>
+                                Skills
+                              </Text>
+                              <View style={currentStyles.skillsGrid}>
+                                {data.skills.map((skill, index) => (
+                                  <View
+                                    key={index}
+                                    style={currentStyles.skillItem}
+                                  >
+                                    <Text style={currentStyles.skillName}>
+                                      {skill.skill}
+                                    </Text>
+                                    {renderProficiency(skill.proficiency)}
+                                  </View>
+                                ))}
+                              </View>
+                            </View>
+                          )}
+
+                          {/* Languages */}
+                          {data.languages && data.languages.length > 0 && (
+                            <View style={currentStyles.subSection}>
+                              <Text style={currentStyles.subSectionTitle}>
+                                Languages
+                              </Text>
+                              {data.languages.map((language, index) => (
+                                <View
+                                  key={index}
+                                  style={currentStyles.languageItem}
+                                >
+                                  <Text style={currentStyles.languageName}>
+                                    {language.language}
+                                  </Text>
+                                  <Text
+                                    style={currentStyles.languageProficiency}
+                                  >
+                                    Read: {language.read}/5 | Write:{' '}
+                                    {language.write}/5 | Speak:{' '}
+                                    {language.speak}/5
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Right Column: Interests & Attributes */}
+                        <View style={currentStyles.rightSubColumn}>
+                          {/* Interests */}
+                          {data.interests && data.interests.length > 0 && (
+                            <View style={currentStyles.subSection}>
+                              <Text style={currentStyles.subSectionTitle}>
+                                Interests
+                              </Text>
+                              <View style={currentStyles.interestsGrid}>
+                                {data.interests.map((interest, index) => (
+                                  <View
+                                    key={index}
+                                    style={currentStyles.interestTag}
+                                  >
+                                    <Text style={currentStyles.interestText}>
+                                      {interest.interest}
+                                    </Text>
+                                  </View>
+                                ))}
+                              </View>
+                            </View>
+                          )}
+
+                          {/* Attributes */}
+                          {data.attributes &&
+                            data.attributes.length > 0 && (
+                              <View style={currentStyles.subSection}>
+                                <Text style={currentStyles.subSectionTitle}>
+                                  Attributes
+                                </Text>
+                                <View style={currentStyles.attributesGrid}>
+                                  {data.attributes.map((attribute, index) => (
+                                    <View
+                                      key={index}
+                                      style={currentStyles.attributeTag}
+                                    >
+                                      <Text
+                                        style={currentStyles.attributeText}
+                                      >
+                                        {attribute.attribute}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -529,7 +590,7 @@ const Template06 = ({
                 {data.references && data.references.length > 0 && (
                   <View style={currentStyles.section}>
                     <View style={currentStyles.sectionHeader}>
-                      <Text style={currentStyles.sectionTitle}>REFERENCES</Text>
+                      <Text style={currentStyles.sectionTitleInHeader}>REFERENCES</Text>
                     </View>
                     <View style={currentStyles.sectionContent}>
                       {data.references.map((reference, index) => (
@@ -537,13 +598,29 @@ const Template06 = ({
                           <Text style={currentStyles.itemTitle}>
                             {reference.name}
                           </Text>
-                          <Text style={currentStyles.itemSubtitle}>
-                            {reference.position} at {reference.company}
-                          </Text>
-                          {reference.contact && (
-                            <Text style={currentStyles.itemDescription}>
-                              Contact: {reference.contact}
+                          {reference.position && (
+                            <Text style={currentStyles.itemSubtitle}>
+                              {reference.position}
                             </Text>
+                          )}
+                          {reference.company && (
+                            <Text style={currentStyles.itemSubtitle}>
+                              {reference.company}
+                            </Text>
+                          )}
+                          {(reference.email || reference.phone) && (
+                            <View style={currentStyles.referenceContact}>
+                              {reference.email && (
+                                <Text style={currentStyles.itemDescription}>
+                                  Email: {reference.email}
+                                </Text>
+                              )}
+                              {reference.phone && (
+                                <Text style={currentStyles.itemDescription}>
+                                  Phone: {reference.phone}
+                                </Text>
+                              )}
+                            </View>
                           )}
                         </View>
                       ))}
@@ -582,6 +659,7 @@ const stylesZoomedOut = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
   },
   container: {
     flex: 1,
@@ -595,8 +673,6 @@ const stylesZoomedOut = StyleSheet.create({
 
     marginBottom: 20,
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
   },
   mastheadTitle: {
     fontSize: 20,
@@ -633,8 +709,6 @@ const stylesZoomedOut = StyleSheet.create({
     lineHeight: 18,
   },
   frontPage: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
     paddingBottom: 20,
     marginBottom: 20,
   },
@@ -654,8 +728,6 @@ const stylesZoomedOut = StyleSheet.create({
     textAlign: 'center',
   },
   contactSection: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
     paddingBottom: 15,
     marginBottom: 20,
   },
@@ -698,11 +770,11 @@ const stylesZoomedOut = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   sectionHeader: {
     marginBottom: 20,
-    paddingBottom: 8,
+    paddingBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: '#000000',
   },
@@ -713,23 +785,55 @@ const stylesZoomedOut = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     margin: 0,
+    paddingBottom: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
+  },
+  sectionTitleInHeader: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    margin: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+    borderBottomColor: 'transparent',
   },
   sectionContent: {
     paddingHorizontal: 12,
   },
-  columns: {
-    flexDirection: 'row',
+  mainContent: {
     marginBottom: 20,
   },
-  leftColumn: {
-    flex: 2,
-    marginRight: 20,
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 15,
   },
-  rightColumn: {
+  leftSubColumn: {
     flex: 1,
+    paddingRight: 8,
+  },
+  rightSubColumn: {
+    flex: 1,
+    paddingLeft: 8,
+  },
+  subSection: {
+    marginBottom: 16,
+  },
+  subSectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
   },
   experienceItem: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   experienceTitle: {
     fontSize: 12,
@@ -743,7 +847,7 @@ const stylesZoomedOut = StyleSheet.create({
     lineHeight: 14,
   },
   employmentItem: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   employmentHeader: {
     marginBottom: 4,
@@ -849,9 +953,7 @@ const stylesZoomedOut = StyleSheet.create({
   },
   item: {
     marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingBottom: 10,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -881,16 +983,18 @@ const stylesZoomedOut = StyleSheet.create({
     color: '#666666',
     lineHeight: 12,
   },
+  referenceContact: {
+    marginTop: 4,
+  },
   skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
   skillItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 6,
-    minWidth: '45%',
+    paddingVertical: 4,
   },
   skillName: {
     fontSize: 10,
@@ -949,8 +1053,6 @@ const stylesZoomedIn = StyleSheet.create({
     padding: 30,
     marginBottom: 30,
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
   },
   mastheadTitle: {
     fontSize: 36,
@@ -987,8 +1089,6 @@ const stylesZoomedIn = StyleSheet.create({
     lineHeight: 27,
   },
   frontPage: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
     paddingBottom: 30,
     marginBottom: 30,
   },
@@ -1008,8 +1108,6 @@ const stylesZoomedIn = StyleSheet.create({
     textAlign: 'center',
   },
   contactSection: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#000000',
     paddingBottom: 22,
     marginBottom: 30,
   },
@@ -1052,11 +1150,11 @@ const stylesZoomedIn = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   section: {
-    marginBottom: 30,
+    marginBottom: 22,
   },
   sectionHeader: {
     marginBottom: 30,
-    paddingBottom: 12,
+    paddingBottom: 5,
     borderBottomWidth: 2,
     borderBottomColor: '#000000',
   },
@@ -1067,23 +1165,55 @@ const stylesZoomedIn = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 2,
     margin: 0,
+    paddingBottom: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
+  },
+  sectionTitleInHeader: {
+    fontSize: 21,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    margin: 0,
+    paddingBottom: 0,
+    borderBottomWidth: 0,
+    borderBottomColor: 'transparent',
   },
   sectionContent: {
     paddingHorizontal: 18,
   },
-  columns: {
-    flexDirection: 'row',
+  mainContent: {
     marginBottom: 30,
   },
-  leftColumn: {
-    flex: 2,
-    marginRight: 30,
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 20,
   },
-  rightColumn: {
+  leftSubColumn: {
     flex: 1,
+    paddingRight: 10,
+  },
+  rightSubColumn: {
+    flex: 1,
+    paddingLeft: 10,
+  },
+  subSection: {
+    marginBottom: 20,
+  },
+  subSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
   },
   experienceItem: {
-    marginBottom: 30,
+    marginBottom: 18,
   },
   experienceTitle: {
     fontSize: 18,
@@ -1097,7 +1227,7 @@ const stylesZoomedIn = StyleSheet.create({
     lineHeight: 21,
   },
   employmentItem: {
-    marginBottom: 30,
+    marginBottom: 18,
   },
   employmentHeader: {
     marginBottom: 6,
@@ -1202,10 +1332,8 @@ const stylesZoomedIn = StyleSheet.create({
     fontWeight: '500',
   },
   item: {
-    marginBottom: 18,
-    paddingBottom: 18,
-    borderBottomWidth: 2,
-    borderBottomColor: '#e0e0e0',
+    marginBottom: 16,
+    paddingBottom: 14,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -1235,16 +1363,18 @@ const stylesZoomedIn = StyleSheet.create({
     color: '#666666',
     lineHeight: 18,
   },
+  referenceContact: {
+    marginTop: 6,
+  },
   skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 18,
+    gap: 10,
   },
   skillItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 9,
-    minWidth: '45%',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingVertical: 6,
   },
   skillName: {
     fontSize: 15,

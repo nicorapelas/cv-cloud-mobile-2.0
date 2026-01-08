@@ -61,6 +61,7 @@ const Template03 = ({
     experiences: showSample ? experienceSample : experiences,
   }
 
+
   // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -170,10 +171,18 @@ const Template03 = ({
                     <View style={currentStyles.contactItem}>
                       <Text style={currentStyles.contactIcon}>📍</Text>
                       <Text style={currentStyles.contactText}>
-                        {data.contactInfo?.address &&
-                          `${data.contactInfo.address}, `}
-                        {data.contactInfo?.city && `${data.contactInfo.city}, `}
-                        {data.contactInfo?.country || 'Your Location'}
+                        {[
+                          data.contactInfo?.complex,
+                          data.contactInfo?.address,
+                          data.contactInfo?.unit,
+                          data.contactInfo?.suburb,
+                          data.contactInfo?.city,
+                          data.contactInfo?.province,
+                          data.contactInfo?.postalCode,
+                          data.contactInfo?.country || 'Your Location',
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
                       </Text>
                     </View>
                   </View>
@@ -196,315 +205,451 @@ const Template03 = ({
                   </View>
                 )}
 
-                {/* Main Content Grid */}
+                {/* Personal Information */}
+                {data.personalInfo && (
+                  <View style={currentStyles.personalInfoSection}>
+                    <View style={currentStyles.sectionHeader}>
+                      <Text style={currentStyles.sectionIcon}>👤</Text>
+                      <Text style={currentStyles.sectionTitle}>
+                        Personal Information
+                      </Text>
+                    </View>
+                    <View style={currentStyles.personalInfoContent}>
+                      <View style={currentStyles.personalInfoGrid}>
+                        {data.personalInfo.dateOfBirth && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              Date of Birth:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {moment(data.personalInfo.dateOfBirth).format(
+                                  'MMMM D, YYYY'
+                                )}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.gender && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              Gender:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {data.personalInfo.gender}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.nationality && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              Nationality:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {data.personalInfo.nationality}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.driversLicense && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              Driver's License:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {data.personalInfo.licenseCode || 'Yes'}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.idNumber && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              ID Number:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {data.personalInfo.idNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.ppNumber && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              Passport Number:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                {data.personalInfo.ppNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.saCitizen && (
+                          <View style={currentStyles.personalInfoItem}>
+                            <Text style={currentStyles.personalInfoLabel}>
+                              SA Citizen:{' '}
+                              <Text style={currentStyles.personalInfoValue}>
+                                Yes
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Main Content - Single Column */}
                 <View style={currentStyles.mainContent}>
-                  {/* Left Column */}
-                  <View style={currentStyles.leftColumn}>
-                    {/* Work Experience */}
-                    {data.employHistorys && data.employHistorys.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <View style={currentStyles.sectionHeader}>
-                          <Text style={currentStyles.sectionIcon}>💼</Text>
-                          <Text style={currentStyles.sectionTitle}>
-                            Work Experience
-                          </Text>
-                        </View>
-                        <View style={currentStyles.sectionContent}>
-                          {data.employHistorys.map((job, index) => (
-                            <View
-                              key={index}
-                              style={currentStyles.experienceItem}
-                            >
-                              <View style={currentStyles.experienceHeader}>
-                                <Text style={currentStyles.experienceTitle}>
-                                  {job.position}
-                                </Text>
-                                <Text style={currentStyles.experienceCompany}>
-                                  {job.company}
-                                </Text>
-                                <Text style={currentStyles.experienceDates}>
-                                  {formatDate(job.startDate)}
-                                  {job.endDate
-                                    ? ` - ${formatDate(job.endDate)}`
-                                    : ' - Present'}
-                                </Text>
-                              </View>
-                              {job.description && (
-                                <Text
-                                  style={currentStyles.experienceDescription}
-                                >
-                                  {job.description}
-                                </Text>
-                              )}
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Education */}
-                    {((data.tertEdus && data.tertEdus.length > 0) ||
-                      (data.secondEdu && data.secondEdu.length > 0)) && (
-                      <View style={currentStyles.section}>
-                        <View style={currentStyles.sectionHeader}>
-                          <Text style={currentStyles.sectionIcon}>🎓</Text>
-                          <Text style={currentStyles.sectionTitle}>
-                            Education
-                          </Text>
-                        </View>
-                        <View style={currentStyles.sectionContent}>
-                          {/* Tertiary Education */}
-                          {data.tertEdus &&
-                            data.tertEdus.map((edu, index) => (
-                              <View
-                                key={`tert-${index}`}
-                                style={currentStyles.educationItem}
-                              >
-                                <View style={currentStyles.educationHeader}>
-                                  <Text style={currentStyles.educationTitle}>
-                                    {edu.certificationType} -{' '}
-                                    {edu.instituteName}
-                                  </Text>
-                                  <Text style={currentStyles.educationDates}>
-                                    {formatDate(edu.startDate)} -{' '}
-                                    {formatDate(edu.endDate)}
-                                  </Text>
-                                </View>
-                                {edu.description && (
-                                  <Text
-                                    style={currentStyles.educationDescription}
-                                  >
-                                    {edu.description}
-                                  </Text>
-                                )}
-                              </View>
-                            ))}
-
-                          {/* Secondary Education */}
-                          {data.secondEdu &&
-                            data.secondEdu.map((edu, index) => (
-                              <View
-                                key={`second-${index}`}
-                                style={currentStyles.educationItem}
-                              >
-                                <View style={currentStyles.educationHeader}>
-                                  <Text style={currentStyles.educationTitle}>
-                                    {edu.schoolName}
-                                  </Text>
-                                  <Text style={currentStyles.educationDates}>
-                                    {formatDate(edu.startDate)} -{' '}
-                                    {formatDate(edu.endDate)}
-                                  </Text>
-                                </View>
-                                {edu.subjects && (
-                                  <View style={currentStyles.educationSubjects}>
-                                    <Text
-                                      style={
-                                        currentStyles.educationSubjectsLabel
-                                      }
-                                    >
-                                      Subjects:{' '}
-                                    </Text>
-                                    {renderSubjects(edu.subjects)}
-                                  </View>
-                                )}
-                              </View>
-                            ))}
-                        </View>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Right Column */}
-                  <View style={currentStyles.rightColumn}>
-                    {/* Skills */}
-                    {data.skills && data.skills.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <View style={currentStyles.sectionHeader}>
-                          <Text style={currentStyles.sectionIcon}>⚡</Text>
-                          <Text style={currentStyles.sectionTitle}>Skills</Text>
-                        </View>
-                        <View style={currentStyles.sectionContent}>
-                          <View style={currentStyles.skillsGrid}>
-                            {data.skills.map((skill, index) => (
-                              <View key={index} style={currentStyles.skillItem}>
-                                <Text style={currentStyles.skillName}>
-                                  {skill.skill}
-                                </Text>
-                                {renderProficiency(skill.proficiency)}
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Languages */}
-                    {data.languages && data.languages.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <View style={currentStyles.sectionHeader}>
-                          <Text style={currentStyles.sectionIcon}>🌍</Text>
-                          <Text style={currentStyles.sectionTitle}>
-                            Languages
-                          </Text>
-                        </View>
-                        <View style={currentStyles.sectionContent}>
-                          <View style={currentStyles.languagesList}>
-                            {data.languages.map((language, index) => (
-                              <View
-                                key={index}
-                                style={currentStyles.languageItem}
-                              >
-                                <Text style={currentStyles.languageName}>
-                                  {language.language}
-                                </Text>
-                                <View style={currentStyles.languageProficiency}>
-                                  <View
-                                    style={
-                                      currentStyles.languageProficiencyItem
-                                    }
-                                  >
-                                    <Text
-                                      style={
-                                        currentStyles.languageProficiencyLabel
-                                      }
-                                    >
-                                      Read:{' '}
-                                    </Text>
-                                    {renderProficiency(language.read)}
-                                  </View>
-                                  <View
-                                    style={
-                                      currentStyles.languageProficiencyItem
-                                    }
-                                  >
-                                    <Text
-                                      style={
-                                        currentStyles.languageProficiencyLabel
-                                      }
-                                    >
-                                      Write:{' '}
-                                    </Text>
-                                    {renderProficiency(language.write)}
-                                  </View>
-                                  <View
-                                    style={
-                                      currentStyles.languageProficiencyItem
-                                    }
-                                  >
-                                    <Text
-                                      style={
-                                        currentStyles.languageProficiencyLabel
-                                      }
-                                    >
-                                      Speak:{' '}
-                                    </Text>
-                                    {renderProficiency(language.speak)}
-                                  </View>
-                                </View>
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* References */}
-                    {data.references && data.references.length > 0 && (
-                      <View style={currentStyles.section}>
-                        <View style={currentStyles.sectionHeader}>
-                          <Text style={currentStyles.sectionIcon}>👥</Text>
-                          <Text style={currentStyles.sectionTitle}>
-                            References
-                          </Text>
-                        </View>
-                        <View style={currentStyles.sectionContent}>
-                          <View style={currentStyles.referencesList}>
-                            {data.references.map((reference, index) => (
-                              <View
-                                key={index}
-                                style={currentStyles.referenceItem}
-                              >
-                                <Text style={currentStyles.referenceName}>
-                                  {reference.name}
-                                </Text>
-                                <Text style={currentStyles.referenceCompany}>
-                                  {reference.company}
-                                </Text>
-                                <View style={currentStyles.referenceContact}>
-                                  {reference.email && (
-                                    <Text style={currentStyles.referenceEmail}>
-                                      {reference.email}
-                                    </Text>
-                                  )}
-                                  {reference.phone && (
-                                    <Text style={currentStyles.referencePhone}>
-                                      {reference.phone}
-                                    </Text>
-                                  )}
-                                </View>
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                {/* Bottom Section */}
-                <View style={currentStyles.bottomSection}>
-                  {/* Experience/Projects */}
-                  {data.experiences && data.experiences.length > 0 && (
+                  {/* Work Experience */}
+                  {data.employHistorys && data.employHistorys.length > 0 && (
                     <View style={currentStyles.section}>
                       <View style={currentStyles.sectionHeader}>
-                        <Text style={currentStyles.sectionIcon}>🚀</Text>
+                        <Text style={currentStyles.sectionIcon}>💼</Text>
                         <Text style={currentStyles.sectionTitle}>
-                          Additional Experience
+                          Employment history
                         </Text>
                       </View>
                       <View style={currentStyles.sectionContent}>
-                        <View style={currentStyles.experiencesGrid}>
-                          {data.experiences.map((experience, index) => (
-                            <View
-                              key={index}
-                              style={currentStyles.experienceCard}
-                            >
-                              <Text style={currentStyles.experienceCardTitle}>
+                        {data.employHistorys.map((job, index) => (
+                          <View
+                            key={index}
+                            style={currentStyles.experienceItem}
+                          >
+                            <View style={currentStyles.experienceHeader}>
+                              <Text style={currentStyles.experienceTitle}>
+                                {job.position}
+                              </Text>
+                              <Text style={currentStyles.experienceCompany}>
+                                {job.company}
+                              </Text>
+                              <Text style={currentStyles.experienceDates}>
+                                {formatDate(job.startDate)}
+                                {job.endDate
+                                  ? ` - ${formatDate(job.endDate)}`
+                                  : ' - Present'}
+                              </Text>
+                            </View>
+                            {job.description && (
+                              <Text style={currentStyles.experienceDescription}>
+                                {job.description}
+                              </Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Experience */}
+                  {data.experiences && data.experiences.length > 0 && (
+                    <View style={currentStyles.section}>
+                      <View style={currentStyles.sectionHeader}>
+                        <Text style={currentStyles.sectionIcon}>🎯</Text>
+                        <Text style={currentStyles.sectionTitle}>
+                          Experience
+                        </Text>
+                      </View>
+                      <View style={currentStyles.sectionContent}>
+                        {data.experiences.map((experience, index) => (
+                          <View
+                            key={index}
+                            style={currentStyles.experienceItem}
+                          >
+                            <View style={currentStyles.experienceHeader}>
+                              <Text style={currentStyles.experienceTitle}>
                                 {experience.title}
                               </Text>
-                              {experience.description && (
+                              {experience.startDate && (
+                                <Text style={currentStyles.experienceDates}>
+                                  {formatDate(experience.startDate)}
+                                  {experience.endDate
+                                    ? ` - ${formatDate(experience.endDate)}`
+                                    : ' - Present'}
+                                </Text>
+                              )}
+                            </View>
+                            {experience.company && (
+                              <Text style={currentStyles.experienceCompany}>
+                                {experience.company}
+                              </Text>
+                            )}
+                            {experience.description && (
+                              <Text
+                                style={currentStyles.experienceDescription}
+                              >
+                                {experience.description}
+                              </Text>
+                            )}
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Education */}
+                  {((data.tertEdus && data.tertEdus.length > 0) ||
+                    (data.secondEdu && data.secondEdu.length > 0)) && (
+                    <View style={currentStyles.section}>
+                      <View style={currentStyles.sectionHeader}>
+                        <Text style={currentStyles.sectionIcon}>🎓</Text>
+                        <Text style={currentStyles.sectionTitle}>
+                          Education
+                        </Text>
+                      </View>
+                      <View style={currentStyles.sectionContent}>
+                        {/* Tertiary Education */}
+                        {data.tertEdus &&
+                          data.tertEdus.map((edu, index) => (
+                            <View
+                              key={`tert-${index}`}
+                              style={currentStyles.educationItem}
+                            >
+                              <View style={currentStyles.educationHeader}>
+                                <Text style={currentStyles.educationTitle}>
+                                  {edu.certificationType} - {edu.instituteName}
+                                </Text>
+                                <Text style={currentStyles.educationDates}>
+                                  {formatDate(edu.startDate)} -{' '}
+                                  {formatDate(edu.endDate)}
+                                </Text>
+                              </View>
+                              {edu.description && (
                                 <Text
-                                  style={
-                                    currentStyles.experienceCardDescription
-                                  }
+                                  style={currentStyles.educationDescription}
                                 >
-                                  {experience.description}
+                                  {edu.description}
                                 </Text>
                               )}
                             </View>
                           ))}
+
+                        {/* Secondary Education */}
+                        {data.secondEdu &&
+                          data.secondEdu.map((edu, index) => (
+                            <View
+                              key={`second-${index}`}
+                              style={currentStyles.educationItem}
+                            >
+                              <View style={currentStyles.educationHeader}>
+                                <Text style={currentStyles.educationTitle}>
+                                  {edu.schoolName}
+                                </Text>
+                                <Text style={currentStyles.educationDates}>
+                                  {formatDate(edu.startDate)} -{' '}
+                                  {formatDate(edu.endDate)}
+                                </Text>
+                              </View>
+                              {edu.subjects && (
+                                <View style={currentStyles.educationSubjects}>
+                                  <Text
+                                    style={
+                                      currentStyles.educationSubjectsLabel
+                                    }
+                                  >
+                                    Subjects:{' '}
+                                  </Text>
+                                  {renderSubjects(edu.subjects)}
+                                </View>
+                              )}
+                            </View>
+                          ))}
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Skills, Languages, Interests & Attributes - Combined Section */}
+                  {(data.skills?.length > 0 ||
+                    data.languages?.length > 0 ||
+                    data.interests?.length > 0 ||
+                    data.attributes?.length > 0) && (
+                    <View style={currentStyles.section}>
+                      <View style={currentStyles.sectionHeader}>
+                        <Text style={currentStyles.sectionIcon}>🛠️</Text>
+                        <Text style={currentStyles.sectionTitle}>
+                          Skills, Languages, Interests & Attributes
+                        </Text>
+                      </View>
+                      <View style={currentStyles.sectionContent}>
+                        <View style={currentStyles.twoColumnContainer}>
+                          {/* Left Column: Skills & Languages */}
+                          <View style={currentStyles.leftSubColumn}>
+                            {/* Skills */}
+                            {data.skills && data.skills.length > 0 && (
+                              <View style={currentStyles.subSection}>
+                                <Text style={currentStyles.subSectionTitle}>
+                                  Skills
+                                </Text>
+                                <View style={currentStyles.skillsGrid}>
+                                  {data.skills.map((skill, index) => (
+                                    <View
+                                      key={index}
+                                      style={currentStyles.skillItem}
+                                    >
+                                      <Text style={currentStyles.skillName}>
+                                        {skill.skill}
+                                      </Text>
+                                      {renderProficiency(skill.proficiency)}
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+
+                            {/* Languages */}
+                            {data.languages && data.languages.length > 0 && (
+                              <View style={currentStyles.subSection}>
+                                <Text style={currentStyles.subSectionTitle}>
+                                  Languages
+                                </Text>
+                                <View style={currentStyles.languagesList}>
+                                  {data.languages.map((language, index) => (
+                                    <View
+                                      key={index}
+                                      style={currentStyles.languageItem}
+                                    >
+                                      <Text style={currentStyles.languageName}>
+                                        {language.language}
+                                      </Text>
+                                      <View
+                                        style={
+                                          currentStyles.languageProficiency
+                                        }
+                                      >
+                                        <View
+                                          style={
+                                            currentStyles.languageProficiencyItem
+                                          }
+                                        >
+                                          <Text
+                                            style={
+                                              currentStyles.languageProficiencyLabel
+                                            }
+                                          >
+                                            Read:{' '}
+                                          </Text>
+                                          {renderProficiency(language.read)}
+                                        </View>
+                                        <View
+                                          style={
+                                            currentStyles.languageProficiencyItem
+                                          }
+                                        >
+                                          <Text
+                                            style={
+                                              currentStyles.languageProficiencyLabel
+                                            }
+                                          >
+                                            Write:{' '}
+                                          </Text>
+                                          {renderProficiency(language.write)}
+                                        </View>
+                                        <View
+                                          style={
+                                            currentStyles.languageProficiencyItem
+                                          }
+                                        >
+                                          <Text
+                                            style={
+                                              currentStyles.languageProficiencyLabel
+                                            }
+                                          >
+                                            Speak:{' '}
+                                          </Text>
+                                          {renderProficiency(language.speak)}
+                                        </View>
+                                      </View>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+                          </View>
+
+                          {/* Right Column: Interests & Attributes */}
+                          <View style={currentStyles.rightSubColumn}>
+                            {/* Interests */}
+                            {data.interests && data.interests.length > 0 && (
+                              <View style={currentStyles.subSection}>
+                                <Text style={currentStyles.subSectionTitle}>
+                                  Interests
+                                </Text>
+                                <View style={currentStyles.interestsList}>
+                                  {data.interests.map((interest, index) => (
+                                    <View
+                                      key={index}
+                                      style={currentStyles.interestTag}
+                                    >
+                                      <Text
+                                        style={currentStyles.interestTagText}
+                                      >
+                                        {interest.interest}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            )}
+
+                            {/* Attributes */}
+                            {data.attributes &&
+                              data.attributes.length > 0 && (
+                                <View style={currentStyles.subSection}>
+                                  <Text style={currentStyles.subSectionTitle}>
+                                    Attributes
+                                  </Text>
+                                  <View style={currentStyles.skillsGrid}>
+                                    {data.attributes.map(
+                                      (attribute, index) => (
+                                        <View
+                                          key={index}
+                                          style={currentStyles.skillItem}
+                                        >
+                                          <Text
+                                            style={currentStyles.skillName}
+                                          >
+                                            {attribute.attribute}
+                                          </Text>
+                                        </View>
+                                      )
+                                    )}
+                                  </View>
+                                </View>
+                              )}
+                          </View>
                         </View>
                       </View>
                     </View>
                   )}
 
-                  {/* Interests */}
-                  {data.interests && data.interests.length > 0 && (
+                  {/* References */}
+                  {data.references && data.references.length > 0 && (
                     <View style={currentStyles.section}>
                       <View style={currentStyles.sectionHeader}>
-                        <Text style={currentStyles.sectionIcon}>🎯</Text>
+                        <Text style={currentStyles.sectionIcon}>👥</Text>
                         <Text style={currentStyles.sectionTitle}>
-                          Interests
+                          References
                         </Text>
                       </View>
                       <View style={currentStyles.sectionContent}>
-                        <View style={currentStyles.interestsList}>
-                          {data.interests.map((interest, index) => (
-                            <View key={index} style={currentStyles.interestTag}>
-                              <Text style={currentStyles.interestTagText}>
-                                {interest.interest}
+                        <View style={currentStyles.referencesList}>
+                          {data.references.map((reference, index) => (
+                            <View
+                              key={index}
+                              style={currentStyles.referenceItem}
+                            >
+                              <Text style={currentStyles.referenceName}>
+                                {reference.name}
                               </Text>
+                              <Text style={currentStyles.referenceCompany}>
+                                {reference.company}
+                              </Text>
+                              <View style={currentStyles.referenceContact}>
+                                {reference.email && (
+                                  <Text style={currentStyles.referenceEmail}>
+                                    {reference.email}
+                                  </Text>
+                                )}
+                                {reference.phone && (
+                                  <Text style={currentStyles.referencePhone}>
+                                    {reference.phone}
+                                  </Text>
+                                )}
+                              </View>
                             </View>
                           ))}
                         </View>
@@ -560,6 +705,7 @@ const stylesZoomedOut = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
     width: 380,
     minHeight: 500,
     flex: 1,
@@ -636,10 +782,43 @@ const stylesZoomedOut = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
+  // Personal Information section
+  personalInfoSection: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  personalInfoContent: {
+    backgroundColor: '#f8fafb',
+    padding: 12,
+    borderRadius: 10,
+  },
+  personalInfoGrid: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  personalInfoItem: {
+    padding: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  personalInfoLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#4b5563',
+  },
+  personalInfoValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   sectionIcon: {
     fontSize: 18,
@@ -659,7 +838,7 @@ const stylesZoomedOut = StyleSheet.create({
   },
   summaryContent: {
     backgroundColor: '#ffffff',
-    padding: 15,
+    padding: 12,
     borderRadius: 10,
     borderLeftWidth: 4,
     borderLeftColor: '#f59e0b',
@@ -672,35 +851,44 @@ const stylesZoomedOut = StyleSheet.create({
 
   // Main content
   mainContent: {
-    flexDirection: 'row',
-    minHeight: 400,
-  },
-  leftColumn: {
-    flex: 1,
     padding: 20,
     backgroundColor: '#ffffff',
-    borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
-  },
-  rightColumn: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f8fafb',
   },
 
   // Section styles
   section: {
-    marginBottom: 25,
+    marginBottom: 18,
   },
   sectionContent: {
     color: '#1f2937',
     lineHeight: 18,
   },
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  leftSubColumn: {
+    flex: 1,
+    paddingRight: 6,
+  },
+  rightSubColumn: {
+    flex: 1,
+    paddingLeft: 6,
+  },
+  subSection: {
+    marginBottom: 16,
+  },
+  subSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6366f1',
+    marginBottom: 8,
+  },
 
   // Experience items
   experienceItem: {
-    marginBottom: 20,
-    padding: 15,
+    marginBottom: 14,
+    padding: 12,
     backgroundColor: '#ffffff',
     borderRadius: 10,
     borderWidth: 1,
@@ -709,19 +897,19 @@ const stylesZoomedOut = StyleSheet.create({
     borderLeftColor: '#6366f1',
   },
   experienceHeader: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   experienceTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#6366f1',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   experienceCompany: {
     fontSize: 14,
     fontWeight: '600',
     color: '#4b5563',
-    marginBottom: 3,
+    marginBottom: 6,
   },
   experienceDates: {
     fontSize: 12,
@@ -740,15 +928,15 @@ const stylesZoomedOut = StyleSheet.create({
 
   // Education items
   educationItem: {
-    marginBottom: 15,
-    padding: 12,
+    marginBottom: 12,
+    padding: 10,
     backgroundColor: '#f8fafb',
     borderRadius: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#10b981',
   },
   educationHeader: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   educationTitle: {
     fontSize: 14,
@@ -779,13 +967,13 @@ const stylesZoomedOut = StyleSheet.create({
 
   // Skills grid
   skillsGrid: {
-    gap: 10,
+    gap: 8,
   },
   skillItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
+    padding: 10,
     backgroundColor: '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
@@ -799,10 +987,10 @@ const stylesZoomedOut = StyleSheet.create({
 
   // Languages list
   languagesList: {
-    gap: 15,
+    gap: 10,
   },
   languageItem: {
-    padding: 12,
+    padding: 10,
     backgroundColor: '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
@@ -812,10 +1000,10 @@ const stylesZoomedOut = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#6366f1',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   languageProficiency: {
-    gap: 6,
+    gap: 5,
   },
   languageProficiencyItem: {
     flexDirection: 'row',
@@ -830,14 +1018,19 @@ const stylesZoomedOut = StyleSheet.create({
 
   // References list
   referencesList: {
-    gap: 15,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
   referenceItem: {
-    padding: 12,
+    width: '48%',
+    flexShrink: 0,
+    padding: 10,
     backgroundColor: '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#f3f4f6',
+    marginBottom: 10,
   },
   referenceName: {
     fontSize: 14,
@@ -888,10 +1081,28 @@ const stylesZoomedOut = StyleSheet.create({
     borderTopWidth: 3,
     borderTopColor: '#6366f1',
   },
+  experienceCardHeader: {
+    marginBottom: 8,
+  },
   experienceCardTitle: {
     fontSize: 14,
     fontWeight: '700',
     color: '#6366f1',
+    marginBottom: 4,
+  },
+  experienceCardDates: {
+    fontSize: 11,
+    color: '#6b7280',
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  experienceCardCompany: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4b5563',
     marginBottom: 8,
   },
   experienceCardDescription: {
@@ -904,13 +1115,14 @@ const stylesZoomedOut = StyleSheet.create({
   interestsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   interestTag: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 16,
+    marginBottom: 4,
   },
   interestTagText: {
     color: '#ffffff',
@@ -931,6 +1143,7 @@ const stylesZoomedIn = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
     width: 570,
     minHeight: 750,
     flex: 1,
@@ -1003,14 +1216,47 @@ const stylesZoomedIn = StyleSheet.create({
   // Summary section
   summarySection: {
     backgroundColor: '#f8fafb',
-    padding: 30,
+    padding: 25,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+  },
+  // Personal Information section
+  personalInfoSection: {
+    backgroundColor: '#ffffff',
+    padding: 25,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  personalInfoContent: {
+    backgroundColor: '#f8fafb',
+    padding: 18,
+    borderRadius: 15,
+  },
+  personalInfoGrid: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  personalInfoItem: {
+    padding: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+  },
+  personalInfoLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4b5563',
+  },
+  personalInfoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   sectionIcon: {
     fontSize: 24,
@@ -1030,7 +1276,7 @@ const stylesZoomedIn = StyleSheet.create({
   },
   summaryContent: {
     backgroundColor: '#ffffff',
-    padding: 25,
+    padding: 18,
     borderRadius: 15,
     borderLeftWidth: 5,
     borderLeftColor: '#f59e0b',
@@ -1043,35 +1289,44 @@ const stylesZoomedIn = StyleSheet.create({
 
   // Main content
   mainContent: {
-    flexDirection: 'row',
-    minHeight: 600,
-  },
-  leftColumn: {
-    flex: 1,
-    padding: 30,
+    padding: 25,
     backgroundColor: '#ffffff',
-    borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
-  },
-  rightColumn: {
-    flex: 1,
-    padding: 30,
-    backgroundColor: '#f8fafb',
   },
 
   // Section styles
   section: {
-    marginBottom: 35,
+    marginBottom: 22,
   },
   sectionContent: {
     color: '#1f2937',
     lineHeight: 22,
   },
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  leftSubColumn: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  rightSubColumn: {
+    flex: 1,
+    paddingLeft: 8,
+  },
+  subSection: {
+    marginBottom: 20,
+  },
+  subSectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#6366f1',
+    marginBottom: 10,
+  },
 
   // Experience items
   experienceItem: {
-    marginBottom: 25,
-    padding: 20,
+    marginBottom: 18,
+    padding: 16,
     backgroundColor: '#ffffff',
     borderRadius: 15,
     borderWidth: 1,
@@ -1080,7 +1335,7 @@ const stylesZoomedIn = StyleSheet.create({
     borderLeftColor: '#6366f1',
   },
   experienceHeader: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   experienceTitle: {
     fontSize: 20,
@@ -1092,7 +1347,7 @@ const stylesZoomedIn = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#4b5563',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   experienceDates: {
     fontSize: 14,
@@ -1111,15 +1366,15 @@ const stylesZoomedIn = StyleSheet.create({
 
   // Education items
   educationItem: {
-    marginBottom: 20,
-    padding: 18,
+    marginBottom: 16,
+    padding: 14,
     backgroundColor: '#f8fafb',
     borderRadius: 12,
     borderLeftWidth: 4,
     borderLeftColor: '#10b981',
   },
   educationHeader: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   educationTitle: {
     fontSize: 18,
@@ -1150,13 +1405,13 @@ const stylesZoomedIn = StyleSheet.create({
 
   // Skills grid
   skillsGrid: {
-    gap: 15,
+    gap: 12,
   },
   skillItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 18,
+    padding: 14,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
@@ -1170,10 +1425,10 @@ const stylesZoomedIn = StyleSheet.create({
 
   // Languages list
   languagesList: {
-    gap: 20,
+    gap: 14,
   },
   languageItem: {
-    padding: 18,
+    padding: 14,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
@@ -1183,10 +1438,10 @@ const stylesZoomedIn = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#6366f1',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   languageProficiency: {
-    gap: 8,
+    gap: 6,
   },
   languageProficiencyItem: {
     flexDirection: 'row',
@@ -1201,14 +1456,19 @@ const stylesZoomedIn = StyleSheet.create({
 
   // References list
   referencesList: {
-    gap: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 14,
   },
   referenceItem: {
-    padding: 18,
+    width: '48%',
+    flexShrink: 0,
+    padding: 14,
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#f3f4f6',
+    marginBottom: 14,
   },
   referenceName: {
     fontSize: 18,
@@ -1259,10 +1519,28 @@ const stylesZoomedIn = StyleSheet.create({
     borderTopWidth: 4,
     borderTopColor: '#6366f1',
   },
+  experienceCardHeader: {
+    marginBottom: 12,
+  },
   experienceCardTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#6366f1',
+    marginBottom: 6,
+  },
+  experienceCardDates: {
+    fontSize: 14,
+    color: '#6b7280',
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+  },
+  experienceCardCompany: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4b5563',
     marginBottom: 12,
   },
   experienceCardDescription: {
@@ -1275,13 +1553,14 @@ const stylesZoomedIn = StyleSheet.create({
   interestsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
   interestTag: {
     backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 20,
+    marginBottom: 4,
   },
   interestTagText: {
     color: '#ffffff',

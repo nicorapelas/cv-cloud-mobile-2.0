@@ -63,6 +63,7 @@ const Template02 = ({
     tertEdus: showSample ? tertEduSample : tertEdus,
   }
 
+
   // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -92,21 +93,24 @@ const Template02 = ({
   }
 
   // Helper function to render proficiency dots
-  const renderProficiency = (level) => {
+  const renderProficiency = (level, currentStyles = styles) => {
     const maxLevel = 5
-    const filledDots = Math.min(level, maxLevel)
+    const filledDots = Math.min(level || 0, maxLevel)
     const emptyDots = maxLevel - filledDots
 
     return (
-      <View style={styles.proficiencyContainer}>
+      <View style={currentStyles.proficiencyContainer}>
         {[...Array(filledDots)].map((_, i) => (
           <View
             key={`filled-${i}`}
-            style={[styles.proficiencyDot, styles.proficiencyDotFilled]}
+            style={[
+              currentStyles.proficiencyDot,
+              currentStyles.proficiencyDotFilled,
+            ]}
           />
         ))}
         {[...Array(emptyDots)].map((_, i) => (
-          <View key={`empty-${i}`} style={styles.proficiencyDot} />
+          <View key={`empty-${i}`} style={currentStyles.proficiencyDot} />
         ))}
       </View>
     )
@@ -174,19 +178,18 @@ const Template02 = ({
                           <View style={currentStyles.contactItem}>
                             <Text style={currentStyles.contactIcon}>📍</Text>
                             <Text style={currentStyles.contactText}>
-                              {data.contactInfo.address}
-                              {data.contactInfo.unit &&
-                                `, ${data.contactInfo.unit}`}
-                              {data.contactInfo.suburb &&
-                                `, ${data.contactInfo.suburb}`}
-                              {data.contactInfo.city &&
-                                `, ${data.contactInfo.city}`}
-                              {data.contactInfo.province &&
-                                `, ${data.contactInfo.province}`}
-                              {data.contactInfo.postalCode &&
-                                `, ${data.contactInfo.postalCode}`}
-                              {data.contactInfo.country &&
-                                `, ${data.contactInfo.country}`}
+                              {[
+                                data.contactInfo.complex,
+                                data.contactInfo.address,
+                                data.contactInfo.unit,
+                                data.contactInfo.suburb,
+                                data.contactInfo.city,
+                                data.contactInfo.province,
+                                data.contactInfo.postalCode,
+                                data.contactInfo.country,
+                              ]
+                                .filter(Boolean)
+                                .join(', ')}
                             </Text>
                           </View>
                         )}
@@ -197,6 +200,100 @@ const Template02 = ({
 
                 {/* Main Content */}
                 <View style={currentStyles.content}>
+                  {/* Personal Information */}
+                  {data.personalInfo && (
+                    <View style={currentStyles.section}>
+                      <View style={currentStyles.sectionHeader}>
+                        <Text style={currentStyles.sectionTitle}>
+                          Personal Information
+                        </Text>
+                      </View>
+                      <View style={currentStyles.sectionContent}>
+                        <View style={currentStyles.personalGrid}>
+                          {data.personalInfo.dateOfBirth && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>📅</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                Date of Birth:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {moment(data.personalInfo.dateOfBirth).format(
+                                    'MMMM D, YYYY'
+                                  )}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.gender && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>👤</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                Gender:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {data.personalInfo.gender}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.nationality && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>🌍</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                Nationality:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {data.personalInfo.nationality}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.driversLicense && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>🚗</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                Driver's License:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {data.personalInfo.licenseCode || 'Yes'}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.idNumber && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>🆔</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                ID Number:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {data.personalInfo.idNumber}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.ppNumber && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>📘</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                Passport Number:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  {data.personalInfo.ppNumber}
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                          {data.personalInfo.saCitizen && (
+                            <View style={currentStyles.personalItem}>
+                              <Text style={currentStyles.personalIcon}>🇿🇦</Text>
+                              <Text style={currentStyles.personalLabel}>
+                                SA Citizen:{' '}
+                                <Text style={currentStyles.personalValue}>
+                                  Yes
+                                </Text>
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  )}
+
                   {/* Personal Summary */}
                   {data.personalSummary?.content && (
                     <View style={currentStyles.section}>
@@ -218,7 +315,7 @@ const Template02 = ({
                     <View style={currentStyles.section}>
                       <View style={currentStyles.sectionHeader}>
                         <Text style={currentStyles.sectionTitle}>
-                          Work Experience
+                          Employment history
                         </Text>
                       </View>
                       <View style={currentStyles.sectionContent}>
@@ -335,10 +432,16 @@ const Template02 = ({
                         <View style={currentStyles.skillsGrid}>
                           {data.skills.map((skill, index) => (
                             <View key={index} style={currentStyles.skillItem}>
-                              <Text style={currentStyles.skillName}>
-                                {skill.skill}
+                              <Text
+                                style={currentStyles.skillName}
+                                numberOfLines={1}
+                              >
+                                {skill.skill || skill.name || 'Skill'}
                               </Text>
-                              {renderProficiency(skill.proficiency)}
+                              {renderProficiency(
+                                skill.proficiency || skill.level || 3,
+                                currentStyles
+                              )}
                             </View>
                           ))}
                         </View>
@@ -369,37 +472,40 @@ const Template02 = ({
                                   style={currentStyles.languageProficiencyRow}
                                 >
                                   <Text
-                                    style={
-                                      currentStyles.languageProficiencyLabel
-                                    }
+                                    style={currentStyles.languageProficiencyLabel}
                                   >
                                     Read:{' '}
                                   </Text>
-                                  {renderProficiency(language.read)}
+                                  {renderProficiency(
+                                    language.read,
+                                    currentStyles
+                                  )}
                                 </View>
                                 <View
                                   style={currentStyles.languageProficiencyRow}
                                 >
                                   <Text
-                                    style={
-                                      currentStyles.languageProficiencyLabel
-                                    }
+                                    style={currentStyles.languageProficiencyLabel}
                                   >
                                     Write:{' '}
                                   </Text>
-                                  {renderProficiency(language.write)}
+                                  {renderProficiency(
+                                    language.write,
+                                    currentStyles
+                                  )}
                                 </View>
                                 <View
                                   style={currentStyles.languageProficiencyRow}
                                 >
                                   <Text
-                                    style={
-                                      currentStyles.languageProficiencyLabel
-                                    }
+                                    style={currentStyles.languageProficiencyLabel}
                                   >
                                     Speak:{' '}
                                   </Text>
-                                  {renderProficiency(language.speak)}
+                                  {renderProficiency(
+                                    language.speak,
+                                    currentStyles
+                                  )}
                                 </View>
                               </View>
                             </View>
@@ -409,12 +515,12 @@ const Template02 = ({
                     </View>
                   )}
 
-                  {/* Experience/Projects */}
+                  {/* Experience */}
                   {data.experiences && data.experiences.length > 0 && (
                     <View style={currentStyles.section}>
                       <View style={currentStyles.sectionHeader}>
                         <Text style={currentStyles.sectionTitle}>
-                          Additional Experience
+                          Experience
                         </Text>
                       </View>
                       <View style={currentStyles.sectionContent}>
@@ -427,6 +533,19 @@ const Template02 = ({
                               <Text style={currentStyles.experienceTitle}>
                                 {experience.title}
                               </Text>
+                              {experience.company && (
+                                <Text style={currentStyles.experienceCompany}>
+                                  {experience.company}
+                                </Text>
+                              )}
+                              {(experience.startDate || experience.endDate) && (
+                                <Text style={currentStyles.experienceDates}>
+                                  {formatDate(experience.startDate)}
+                                  {experience.endDate
+                                    ? ` - ${formatDate(experience.endDate)}`
+                                    : ' - Present'}
+                                </Text>
+                              )}
                             </View>
                             {experience.description && (
                               <Text style={currentStyles.experienceDescription}>
@@ -453,6 +572,28 @@ const Template02 = ({
                             <View key={index} style={currentStyles.interestTag}>
                               <Text style={currentStyles.interestText}>
                                 {interest.interest}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Attributes */}
+                  {data.attributes && data.attributes.length > 0 && (
+                    <View style={currentStyles.section}>
+                      <View style={currentStyles.sectionHeader}>
+                        <Text style={currentStyles.sectionTitle}>
+                          Attributes
+                        </Text>
+                      </View>
+                      <View style={currentStyles.sectionContent}>
+                        <View style={currentStyles.attributesList}>
+                          {data.attributes.map((attribute, index) => (
+                            <View key={index} style={currentStyles.attributeTag}>
+                              <Text style={currentStyles.attributeText}>
+                                {attribute.attribute}
                               </Text>
                             </View>
                           ))}
@@ -549,6 +690,7 @@ const stylesZoomedOut = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
     width: 380,
     minHeight: 500,
     flex: 1,
@@ -631,6 +773,57 @@ const stylesZoomedOut = StyleSheet.create({
   },
   sectionContent: {
     paddingHorizontal: 12,
+  },
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  leftColumn: {
+    flex: 1,
+    paddingRight: 6,
+  },
+  rightColumn: {
+    flex: 1,
+    paddingLeft: 6,
+  },
+  subSection: {
+    marginBottom: 16,
+  },
+  subSectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2563eb',
+    marginBottom: 8,
+  },
+  personalGrid: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  personalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f8fafc',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    marginBottom: 6,
+  },
+  personalIcon: {
+    fontSize: 12,
+    marginRight: 8,
+    width: 16,
+  },
+  personalLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#475569',
+    minWidth: 80,
+  },
+  personalValue: {
+    fontSize: 10,
+    color: '#1e293b',
+    fontWeight: '600',
   },
   summary: {
     fontSize: 11,
@@ -725,28 +918,44 @@ const stylesZoomedOut = StyleSheet.create({
 
   // Skills grid
   skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: 12,
   },
   skillItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    padding: 12,
     backgroundColor: '#f8fafc',
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#f1f5f9',
-    minWidth: '45%',
-    flex: 1,
-    marginBottom: 6,
+    width: '100%',
+    marginBottom: 0,
   },
   skillName: {
     fontSize: 10,
     fontWeight: '500',
     color: '#1e293b',
     flex: 1,
+    flexShrink: 1,
+    marginRight: 8,
+  },
+  proficiencyContainer: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  proficiencyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  proficiencyDotFilled: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
   },
 
   // Languages grid
@@ -795,6 +1004,24 @@ const stylesZoomedOut = StyleSheet.create({
     borderRadius: 12,
   },
   interestText: {
+    fontSize: 9,
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+
+  // Attributes list
+  attributesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  attributeTag: {
+    backgroundColor: '#64748b',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  attributeText: {
     fontSize: 9,
     color: '#ffffff',
     fontWeight: '500',
@@ -854,6 +1081,7 @@ const stylesZoomedIn = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
     width: 570,
     minHeight: 750,
     flex: 1,
@@ -936,6 +1164,57 @@ const stylesZoomedIn = StyleSheet.create({
   },
   sectionContent: {
     paddingHorizontal: 18,
+  },
+  twoColumnContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  leftColumn: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  rightColumn: {
+    flex: 1,
+    paddingLeft: 8,
+  },
+  subSection: {
+    marginBottom: 20,
+  },
+  subSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2563eb',
+    marginBottom: 12,
+  },
+  personalGrid: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  personalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#f8fafc',
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    marginBottom: 9,
+  },
+  personalIcon: {
+    fontSize: 16,
+    marginRight: 10,
+    width: 20,
+  },
+  personalLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#475569',
+    minWidth: 100,
+  },
+  personalValue: {
+    fontSize: 15,
+    color: '#1e293b',
+    fontWeight: '600',
   },
   summary: {
     fontSize: 16,
@@ -1030,8 +1309,7 @@ const stylesZoomedIn = StyleSheet.create({
 
   // Skills grid
   skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
     gap: 18,
   },
   skillItem: {
@@ -1043,15 +1321,32 @@ const stylesZoomedIn = StyleSheet.create({
     borderRadius: 9,
     borderWidth: 1,
     borderColor: '#f1f5f9',
-    minWidth: '45%',
-    flex: 1,
-    marginBottom: 9,
+    width: '100%',
+    marginBottom: 0,
   },
   skillName: {
     fontSize: 15,
     fontWeight: '500',
     color: '#1e293b',
     flex: 1,
+    flexShrink: 1,
+    marginRight: 12,
+  },
+  proficiencyContainer: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  proficiencyDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  proficiencyDotFilled: {
+    backgroundColor: '#f59e0b',
+    borderColor: '#f59e0b',
   },
 
   // Languages grid
@@ -1100,6 +1395,24 @@ const stylesZoomedIn = StyleSheet.create({
     borderRadius: 18,
   },
   interestText: {
+    fontSize: 13,
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+
+  // Attributes list
+  attributesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 18,
+  },
+  attributeTag: {
+    backgroundColor: '#64748b',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 30,
+  },
+  attributeText: {
     fontSize: 13,
     color: '#ffffff',
     fontWeight: '500',

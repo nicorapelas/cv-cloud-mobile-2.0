@@ -60,6 +60,7 @@ const Template05 = ({
     experiences: showSample ? experienceSample : experiences,
   }
 
+
   // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -111,7 +112,7 @@ const Template05 = ({
         />
       )
     }
-    return dots
+    return <View style={currentStyles.proficiencyContainer}>{dots}</View>
   }
 
   // Helper function to render subjects
@@ -177,10 +178,13 @@ const Template05 = ({
                             <Text style={currentStyles.contactIcon}>📍</Text>
                             <Text style={currentStyles.contactText}>
                               {[
+                                data.contactInfo?.complex,
                                 data.contactInfo?.address,
+                                data.contactInfo?.unit,
                                 data.contactInfo?.suburb,
                                 data.contactInfo?.city,
                                 data.contactInfo?.province,
+                                data.contactInfo?.postalCode,
                                 data.contactInfo?.country,
                               ]
                                 .filter(Boolean)
@@ -208,12 +212,12 @@ const Template05 = ({
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalIcon}>📅</Text>
                             <Text style={currentStyles.personalLabel}>
-                              Date of Birth:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {moment(data.personalInfo.dateOfBirth).format(
-                                'MMMM D, YYYY'
-                              )}
+                              Date of Birth:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {moment(data.personalInfo.dateOfBirth).format(
+                                  'MMMM D, YYYY'
+                                )}
+                              </Text>
                             </Text>
                           </View>
                         )}
@@ -221,10 +225,10 @@ const Template05 = ({
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalIcon}>👤</Text>
                             <Text style={currentStyles.personalLabel}>
-                              Gender:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.gender}
+                              Gender:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.gender}
+                              </Text>
                             </Text>
                           </View>
                         )}
@@ -232,10 +236,10 @@ const Template05 = ({
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalIcon}>🌍</Text>
                             <Text style={currentStyles.personalLabel}>
-                              Nationality:
-                            </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.nationality}
+                              Nationality:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.nationality}
+                              </Text>
                             </Text>
                           </View>
                         )}
@@ -243,10 +247,43 @@ const Template05 = ({
                           <View style={currentStyles.personalItem}>
                             <Text style={currentStyles.personalIcon}>🚗</Text>
                             <Text style={currentStyles.personalLabel}>
-                              Driver's License:
+                              Driver's License:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.licenseCode || 'Yes'}
+                              </Text>
                             </Text>
-                            <Text style={currentStyles.personalValue}>
-                              {data.personalInfo.licenseCode || 'Yes'}
+                          </View>
+                        )}
+                        {data.personalInfo.idNumber && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalIcon}>🆔</Text>
+                            <Text style={currentStyles.personalLabel}>
+                              ID Number:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.idNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.ppNumber && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalIcon}>📘</Text>
+                            <Text style={currentStyles.personalLabel}>
+                              Passport Number:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                {data.personalInfo.ppNumber}
+                              </Text>
+                            </Text>
+                          </View>
+                        )}
+                        {data.personalInfo.saCitizen && (
+                          <View style={currentStyles.personalItem}>
+                            <Text style={currentStyles.personalIcon}>🇿🇦</Text>
+                            <Text style={currentStyles.personalLabel}>
+                              SA Citizen:{' '}
+                              <Text style={currentStyles.personalValue}>
+                                Yes
+                              </Text>
                             </Text>
                           </View>
                         )}
@@ -374,11 +411,11 @@ const Template05 = ({
 
                   {/* Right Content */}
                   <View style={currentStyles.content}>
-                    {/* Experience */}
+                    {/* Work Experience */}
                     {data.employHistorys && data.employHistorys.length > 0 && (
                       <View style={currentStyles.section}>
                         <Text style={currentStyles.sectionTitle}>
-                          Experience
+                          Employment history
                         </Text>
                         <View style={currentStyles.experience}>
                           {data.employHistorys.map((job, index) => (
@@ -388,11 +425,11 @@ const Template05 = ({
                             >
                               <View style={currentStyles.experienceHeader}>
                                 <Text style={currentStyles.experienceTitle}>
-                                  {job.jobTitle}
+                                  {job.position || job.jobTitle}
                                 </Text>
                                 <View style={currentStyles.experienceMeta}>
                                   <Text style={currentStyles.company}>
-                                    {job.companyName}
+                                    {job.company || job.companyName}
                                   </Text>
                                   <Text style={currentStyles.dates}>
                                     {formatDate(job.startDate)} -{' '}
@@ -407,6 +444,51 @@ const Template05 = ({
                                   style={currentStyles.experienceDescription}
                                 >
                                   {job.description}
+                                </Text>
+                              )}
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Experience */}
+                    {data.experiences && data.experiences.length > 0 && (
+                      <View style={currentStyles.section}>
+                        <Text style={currentStyles.sectionTitle}>
+                          Experience
+                        </Text>
+                        <View style={currentStyles.experience}>
+                          {data.experiences.map((experience, index) => (
+                            <View
+                              key={index}
+                              style={currentStyles.experienceItem}
+                            >
+                              <View style={currentStyles.experienceHeader}>
+                                <Text style={currentStyles.experienceTitle}>
+                                  {experience.title}
+                                </Text>
+                                <View style={currentStyles.experienceMeta}>
+                                  {experience.company && (
+                                    <Text style={currentStyles.company}>
+                                      {experience.company}
+                                    </Text>
+                                  )}
+                                  {experience.startDate && (
+                                    <Text style={currentStyles.dates}>
+                                      {formatDate(experience.startDate)} -{' '}
+                                      {experience.endDate
+                                        ? formatDate(experience.endDate)
+                                        : 'Present'}
+                                    </Text>
+                                  )}
+                                </View>
+                              </View>
+                              {experience.description && (
+                                <Text
+                                  style={currentStyles.experienceDescription}
+                                >
+                                  {experience.description}
                                 </Text>
                               )}
                             </View>
@@ -476,9 +558,9 @@ const Template05 = ({
                                       }
                                     >
                                       Subjects:{' '}
-                                    </Text>
-                                    <Text style={currentStyles.subject}>
-                                      {renderSubjects(edu.subjects)}
+                                      <Text style={currentStyles.subject}>
+                                        {renderSubjects(edu.subjects)}
+                                      </Text>
                                     </Text>
                                   </View>
                                 )}
@@ -558,6 +640,7 @@ const stylesZoomedOut = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginTop: 5,
     marginLeft: 10,
+    marginRight: 10,
   },
   container: {
     flex: 1,
@@ -624,7 +707,6 @@ const stylesZoomedOut = StyleSheet.create({
   },
   main: {
     flexDirection: 'row',
-    minHeight: 600,
   },
   sidebar: {
     width: 250,
@@ -639,7 +721,7 @@ const stylesZoomedOut = StyleSheet.create({
     maxWidth: 550,
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 18,
   },
   sectionHeader: {
     backgroundColor: '#161b22',
@@ -710,12 +792,11 @@ const stylesZoomedOut = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   skills: {
-    gap: 12,
+    gap: 10,
   },
   skillItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 8,
     padding: 10,
     backgroundColor: '#161b22',
     borderRadius: 6,
@@ -751,7 +832,7 @@ const stylesZoomedOut = StyleSheet.create({
     elevation: 3,
   },
   languages: {
-    gap: 15,
+    gap: 12,
   },
   languageItem: {
     backgroundColor: '#161b22',
@@ -779,6 +860,13 @@ const stylesZoomedOut = StyleSheet.create({
     fontWeight: '500',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     fontSize: 11,
+    flexShrink: 0,
+  },
+  proficiencyContainer: {
+    flexDirection: 'row',
+    gap: 3,
+    flexShrink: 0,
+    marginLeft: 'auto',
   },
   attributes: {
     gap: 8,
@@ -826,10 +914,10 @@ const stylesZoomedOut = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   experience: {
-    gap: 20,
+    gap: 14,
   },
   experienceItem: {
-    padding: 15,
+    padding: 12,
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     borderLeftWidth: 4,
@@ -867,17 +955,17 @@ const stylesZoomedOut = StyleSheet.create({
     flexShrink: 1,
   },
   education: {
-    gap: 15,
+    gap: 14,
   },
   educationItem: {
-    padding: 15,
+    padding: 12,
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     borderLeftWidth: 4,
     borderLeftColor: '#27ae60',
   },
   educationHeader: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   educationTitle: {
     fontSize: 14,
@@ -908,7 +996,7 @@ const stylesZoomedOut = StyleSheet.create({
     color: '#5a6c7d',
   },
   references: {
-    gap: 15,
+    gap: 12,
   },
   referenceItem: {
     padding: 15,
@@ -1021,7 +1109,6 @@ const stylesZoomedIn = StyleSheet.create({
   },
   main: {
     flexDirection: 'row',
-    minHeight: 900,
   },
   sidebar: {
     width: 375,
@@ -1036,7 +1123,7 @@ const stylesZoomedIn = StyleSheet.create({
     maxWidth: 825,
   },
   section: {
-    marginBottom: 37,
+    marginBottom: 22,
   },
   sectionHeader: {
     backgroundColor: '#161b22',
@@ -1107,12 +1194,11 @@ const stylesZoomedIn = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   skills: {
-    gap: 18,
+    gap: 14,
   },
   skillItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 12,
     padding: 15,
     backgroundColor: '#161b22',
     borderRadius: 9,
@@ -1129,6 +1215,12 @@ const stylesZoomedIn = StyleSheet.create({
   skillLevel: {
     flexDirection: 'row',
     gap: 4,
+  },
+  proficiencyContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    flexShrink: 0,
+    marginLeft: 'auto',
   },
   proficiencyDot: {
     width: 9,
@@ -1148,7 +1240,7 @@ const stylesZoomedIn = StyleSheet.create({
     elevation: 4,
   },
   languages: {
-    gap: 22,
+    gap: 16,
   },
   languageItem: {
     backgroundColor: '#161b22',
@@ -1223,17 +1315,17 @@ const stylesZoomedIn = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   experience: {
-    gap: 30,
+    gap: 18,
   },
   experienceItem: {
-    padding: 22,
+    padding: 16,
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
     borderLeftWidth: 6,
     borderLeftColor: '#e74c3c',
   },
   experienceHeader: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   experienceTitle: {
     fontSize: 21,
@@ -1264,17 +1356,17 @@ const stylesZoomedIn = StyleSheet.create({
     flexShrink: 1,
   },
   education: {
-    gap: 22,
+    gap: 18,
   },
   educationItem: {
-    padding: 22,
+    padding: 16,
     backgroundColor: '#f8f9fa',
     borderRadius: 12,
     borderLeftWidth: 6,
     borderLeftColor: '#27ae60',
   },
   educationHeader: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   educationTitle: {
     fontSize: 21,
@@ -1305,7 +1397,7 @@ const stylesZoomedIn = StyleSheet.create({
     color: '#5a6c7d',
   },
   references: {
-    gap: 22,
+    gap: 16,
   },
   referenceItem: {
     padding: 22,

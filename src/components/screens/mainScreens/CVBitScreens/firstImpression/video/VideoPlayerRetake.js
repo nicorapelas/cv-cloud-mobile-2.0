@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useRef } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native'
 import {
   AntDesign,
@@ -14,6 +14,7 @@ import { Context as UniversalContext } from '../../../../../../context/Universal
 
 const VideoPlayerRetake = ({ firstImpression }) => {
   const [isPlaying, setIsPlaying] = useState(false)
+  const playerRef = useRef(null)
 
   const {
     state: { loading },
@@ -21,23 +22,30 @@ const VideoPlayerRetake = ({ firstImpression }) => {
 
   const { showDeleteModal } = useContext(UniversalContext)
 
+  // Only create player when we have a valid videoUrl
   const player = useVideoPlayer(
     firstImpression?.videoUrl ? { uri: firstImpression.videoUrl } : undefined
   )
 
+  // Store player reference and handle updates
   useEffect(() => {
-    if (firstImpression?.videoUrl && player) {
-      player.replaceAsync({ uri: firstImpression.videoUrl }).then(() => {
-        player.loop = true
-      })
+    if (player) {
+      playerRef.current = player
+      // Set loop when player is ready
+      player.loop = true
     }
-  }, [firstImpression?.videoUrl])
+    return () => {
+      playerRef.current = null
+    }
+  }, [player])
 
   useEffect(() => {
     if (!player) return
 
     const subscription = player.addListener('playingChange', (newIsPlaying) => {
-      setIsPlaying(newIsPlaying)
+      if (playerRef.current === player) {
+        setIsPlaying(newIsPlaying)
+      }
     })
 
     return () => {
@@ -46,11 +54,14 @@ const VideoPlayerRetake = ({ firstImpression }) => {
   }, [player])
 
   const renderContent = () => {
-    if (!firstImpression.videoUrl) return null
+    if (!firstImpression?.videoUrl) return null
     if (loading) return <LoaderFullScreen />
+    if (!player) return null
+    
     return (
       <View style={styles.videoBed}>
         <VideoView
+          key={firstImpression.videoUrl} // Force remount when videoUrl changes
           player={player}
           style={styles.video}
           nativeControls
@@ -60,7 +71,15 @@ const VideoPlayerRetake = ({ firstImpression }) => {
         <View style={styles.buttonsBed}>
           <TouchableOpacity
             style={styles.playButton}
-            onPress={() => (isPlaying ? player.pause() : player.play())}
+            onPress={() => {
+              if (player && playerRef.current === player) {
+                try {
+                  isPlaying ? player.pause() : player.play()
+                } catch (error) {
+                  console.log('[VideoPlayerRetake] Error controlling playback:', error)
+                }
+              }
+            }}
           >
             {isPlaying ? (
               <MaterialIcons
