@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react'
+import React, { useEffect, useContext, useState, useRef } from 'react'
 import {
   View,
   TouchableOpacity,
@@ -10,6 +10,7 @@ import {
   FlatList,
 } from 'react-native'
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import LoaderWithText from '../../../common/LoaderWithText'
 import logo from '../../../../../assets/images/logo-h79.png'
@@ -43,12 +44,22 @@ import { Context as TertEduContext } from '../../../../context/TertEduContext'
 import { Context as UniversalContext } from '../../../../context/UniversalContext'
 import ngrokApi from '../../../../api/ngrok'
 
+// Valid template options
+const VALID_TEMPLATES = [
+  'template01', 'template02', 'template03', 'template04', 'template05',
+  'template06', 'template07', 'template08', 'template09', 'template10'
+]
+const DEFAULT_TEMPLATE = 'template01' // Modern template
+const TEMPLATE_STORAGE_KEY = 'cvTemplate'
+
 const ViewCVScreen = () => {
   const [zoom, setZoom] = useState('zoomedOut')
   const [showSample, setShowSample] = useState(false)
   const [showSampleButton, setShowSampleButton] = useState(true)
-  const [selectedTemplate, setSelectedTemplate] = useState('template01') // Template01 as default
+  const [selectedTemplate, setSelectedTemplate] = useState(DEFAULT_TEMPLATE)
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false)
+  const hasInitialized = useRef(false)
+  const saveTimeoutRef = useRef(null)
 
   // Template options for dropdown
   const templateOptions = [
@@ -72,9 +83,110 @@ const ViewCVScreen = () => {
     return selected ? selected.label : 'Modern'
   }
 
-  const handleTemplateSelect = (templateValue) => {
+  // Load template preference on mount (Database > AsyncStorage > Default)
+  // Database is checked first to ensure cross-platform sync with web app
+  useEffect(() => {
+    if (hasInitialized.current) return
+
+    const loadTemplatePreference = async () => {
+      try {
+        let selectedTemplateValue = null
+
+        // Priority 1: Fetch from database (for cross-platform sync)
+        try {
+          const response = await ngrokApi.get('/api/user-preferences/cv-template')
+          if (response.data?.cvTemplate && VALID_TEMPLATES.includes(response.data.cvTemplate)) {
+            selectedTemplateValue = response.data.cvTemplate
+            console.log('📋 Template from database:', selectedTemplateValue)
+            // Also save to AsyncStorage as backup
+            await AsyncStorage.setItem(TEMPLATE_STORAGE_KEY, selectedTemplateValue)
+          }
+        } catch (apiError) {
+          console.warn('⚠️ Could not fetch template from database:', apiError)
+          // Fall through to AsyncStorage
+        }
+
+        // Priority 2: Check AsyncStorage (as fallback if database unavailable)
+        if (!selectedTemplateValue) {
+          try {
+            const templateFromStorage = await AsyncStorage.getItem(TEMPLATE_STORAGE_KEY)
+            if (templateFromStorage && VALID_TEMPLATES.includes(templateFromStorage)) {
+              selectedTemplateValue = templateFromStorage
+              console.log('📋 Template from AsyncStorage:', selectedTemplateValue)
+            }
+          } catch (storageError) {
+            console.warn('⚠️ Could not read from AsyncStorage:', storageError)
+          }
+        }
+
+        // Priority 3: Use default
+        if (!selectedTemplateValue) {
+          selectedTemplateValue = DEFAULT_TEMPLATE
+          console.log('📋 Using default template:', selectedTemplateValue)
+        }
+
+        // Set the template
+        setSelectedTemplate(selectedTemplateValue)
+        hasInitialized.current = true
+      } catch (error) {
+        console.error('❌ Error loading template preference:', error)
+        // Fallback to default on any error
+        setSelectedTemplate(DEFAULT_TEMPLATE)
+        hasInitialized.current = true
+      }
+    }
+
+    loadTemplatePreference()
+  }, [])
+
+  // Save template preference when it changes
+  const saveTemplatePreference = async (templateValue) => {
+    if (!templateValue || !VALID_TEMPLATES.includes(templateValue)) {
+      return
+    }
+
+    try {
+      // Save to AsyncStorage immediately (local backup)
+      await AsyncStorage.setItem(TEMPLATE_STORAGE_KEY, templateValue)
+      console.log('✅ Template saved to AsyncStorage:', templateValue)
+    } catch (storageError) {
+      console.warn('⚠️ Could not save to AsyncStorage:', storageError)
+    }
+
+    // Save to database (debounced to avoid too many API calls)
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await ngrokApi.put('/api/user-preferences/cv-template', {
+          cvTemplate: templateValue,
+        })
+        console.log('✅ Template preference saved to database:', templateValue)
+      } catch (apiError) {
+        console.warn('⚠️ Could not save template to database:', apiError)
+        // Don't show error to user - AsyncStorage backup is sufficient
+      }
+    }, 500) // 500ms debounce
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleTemplateSelect = async (templateValue) => {
     setSelectedTemplate(templateValue)
     setShowTemplateDropdown(false)
+    // Save preference (only if initialized to avoid saving during initial load)
+    if (hasInitialized.current) {
+      await saveTemplatePreference(templateValue)
+    }
   }
 
   const {
