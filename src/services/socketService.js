@@ -118,6 +118,12 @@ class SocketService {
       console.log('📢 Received notification:', data);
       this.notifyListeners('notification', data);
     });
+
+    // System settings updates (broadcast to all users)
+    this.socket.on('system-settings-updated', (data) => {
+      console.log('⚙️ System settings updated:', data);
+      this.notifyListeners('system-settings-updated', data);
+    });
   }
 
   /**

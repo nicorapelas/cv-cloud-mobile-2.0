@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef } from 'react'
-import { View, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import {
   AntDesign,
   MaterialCommunityIcons,
@@ -22,9 +22,14 @@ const VideoPlayerRetake = ({ firstImpression }) => {
 
   const { showDeleteModal } = useContext(UniversalContext)
 
+  // Handle firstImpression as array or object
+  const firstImpressionData = Array.isArray(firstImpression) 
+    ? firstImpression[0] 
+    : firstImpression
+
   // Only create player when we have a valid videoUrl
   const player = useVideoPlayer(
-    firstImpression?.videoUrl ? { uri: firstImpression.videoUrl } : undefined
+    firstImpressionData?.videoUrl ? { uri: firstImpressionData.videoUrl } : undefined
   )
 
   // Store player reference and handle updates
@@ -53,21 +58,50 @@ const VideoPlayerRetake = ({ firstImpression }) => {
     }
   }, [player])
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return null
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    } catch (error) {
+      return null
+    }
+  }
+
   const renderContent = () => {
-    if (!firstImpression?.videoUrl) return null
+    // Handle firstImpression as array or object
+    const firstImpressionData = Array.isArray(firstImpression) 
+      ? firstImpression[0] 
+      : firstImpression
+    
+    if (!firstImpressionData?.videoUrl) return null
     if (loading) return <LoaderFullScreen />
     if (!player) return null
+    
+    const createdDate = firstImpressionData?.created
     
     return (
       <View style={styles.videoBed}>
         <VideoView
-          key={firstImpression.videoUrl} // Force remount when videoUrl changes
+          key={firstImpressionData.videoUrl} // Force remount when videoUrl changes
           player={player}
           style={styles.video}
           nativeControls
           contentFit="contain"
           fullscreenOptions={{ enterFullscreenButtonVisible: true }}
         />
+        {createdDate && (
+          <View style={styles.timestampContainer}>
+            <Text style={styles.timestampText}>
+              📅 Created: {formatDate(createdDate)}
+            </Text>
+          </View>
+        )}
         <View style={styles.buttonsBed}>
           <TouchableOpacity
             style={styles.playButton}
@@ -106,18 +140,22 @@ const VideoPlayerRetake = ({ firstImpression }) => {
 
   // Log first impression data for debugging
   useEffect(() => {
+    const firstImpressionData = Array.isArray(firstImpression) 
+      ? firstImpression[0] 
+      : firstImpression
     console.log('[VideoPlayerRetake] First impression data:', {
-      id: firstImpression?._id,
-      publicId: firstImpression?.publicId,
-      hasVideoUrl: !!firstImpression?.videoUrl,
+      id: firstImpressionData?._id,
+      publicId: firstImpressionData?.publicId,
+      hasVideoUrl: !!firstImpressionData?.videoUrl,
+      created: firstImpressionData?.created,
     })
   }, [firstImpression])
 
   return (
     <>
       <DeleteModal
-        id={firstImpression._id}
-        publicId={firstImpression?.publicId || null}
+        id={Array.isArray(firstImpression) ? firstImpression[0]?._id : firstImpression?._id}
+        publicId={Array.isArray(firstImpression) ? firstImpression[0]?.publicId : firstImpression?.publicId || null}
         bit="first impression"
       />
       {renderContent()}
@@ -156,6 +194,17 @@ const styles = StyleSheet.create({
   deleteButtonIcon: {
     color: 'red',
     fontSize: 42,
+  },
+  timestampContainer: {
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  timestampText: {
+    color: '#ffff',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 })
 
