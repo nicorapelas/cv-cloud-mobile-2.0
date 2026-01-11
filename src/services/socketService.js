@@ -13,6 +13,8 @@ class SocketService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.eventListeners = new Map();
+    this.shouldReconnect = true;
+    this.reconnectTimeout = null;
   }
 
   /**
@@ -24,11 +26,17 @@ class SocketService {
       return this.socket;
     }
 
+    // Reset reconnection state if we're starting fresh
+    if (!this.socket) {
+      this.reconnectAttempts = 0;
+      this.shouldReconnect = true;
+    }
+
     console.log('🔌 Connecting to Socket.IO server:', keys.serverUrl);
 
     this.socket = io(keys.serverUrl, {
       transports: ['websocket', 'polling'],
-      reconnection: true,
+      reconnection: this.shouldReconnect,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
@@ -50,7 +58,13 @@ class SocketService {
     this.socket.on('connect', () => {
       this.isConnected = true;
       this.reconnectAttempts = 0;
+      this.shouldReconnect = true; // Reset flag on successful connection
       console.log('✅ Socket connected:', this.socket.id);
+
+      // Re-enable reconnection if it was disabled
+      if (this.socket) {
+        this.socket.io.opts.reconnection = true;
+      }
 
       // Re-authenticate if we have a userId
       if (this.userId) {
@@ -68,7 +82,17 @@ class SocketService {
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('❌ Max reconnection attempts reached');
+        console.error('❌ Max reconnection attempts reached. Stopping reconnection attempts.');
+        this.shouldReconnect = false;
+        // Disable automatic reconnection
+        if (this.socket) {
+          this.socket.io.opts.reconnection = false;
+        }
+        // Clear any pending reconnection timeout
+        if (this.reconnectTimeout) {
+          clearTimeout(this.reconnectTimeout);
+          this.reconnectTimeout = null;
+        }
       }
     });
 
@@ -173,8 +197,26 @@ class SocketService {
       this.socket.disconnect();
       this.isConnected = false;
       this.userId = null;
+      this.reconnectAttempts = 0;
+      this.shouldReconnect = true;
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
       console.log('🔌 Socket disconnected manually');
     }
+  }
+
+  /**
+   * Reset reconnection state and allow reconnection again
+   */
+  resetReconnection() {
+    this.reconnectAttempts = 0;
+    this.shouldReconnect = true;
+    if (this.socket) {
+      this.socket.io.opts.reconnection = true;
+    }
+    console.log('🔄 Reconnection state reset');
   }
 }
 

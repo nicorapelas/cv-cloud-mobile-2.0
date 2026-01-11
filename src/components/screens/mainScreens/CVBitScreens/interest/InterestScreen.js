@@ -52,7 +52,9 @@ const InterestScreen = () => {
                 <View style={styles.titleBed}>
                   <View style={styles.titleContainer}>
                     <Octicons style={styles.point} name="dot-fill" />
-                    <Text style={styles.title}>{item.interest}</Text>
+                    <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                      {item.interest}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.buttonBed}>
@@ -132,9 +134,13 @@ const styles = StyleSheet.create({
   },
   titleBed: {
     justifyContent: 'center',
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 10,
   },
   titleContainer: {
     flexDirection: 'row',
+    flex: 1,
   },
   point: {
     paddingTop: 4,
@@ -143,6 +149,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     paddingLeft: 10,
+    flex: 1,
+    flexShrink: 1,
   },
   buttonBed: {
     backgroundColor: '#232936',
@@ -153,6 +161,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     maxHeight: 45,
     borderRadius: 25,
+    flexShrink: 0,
   },
   editButtonBed: {
     backgroundColor: '#278ACD',

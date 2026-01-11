@@ -40,7 +40,7 @@ const ContactInfoEditForm = () => {
   const [postalCode, setPostalCode] = useState(null)
 
   const [emailInputShow, setEmailInputShow] = useState(true)
-  const [phoneInputShoow, setPhoneInputShow] = useState(false)
+  const [phoneInputShow, setPhoneInputShow] = useState(false)
   const [addressInputShow, setAddressInputShow] = useState(false)
   const [saveButtonShow, setSaveButtonShow] = useState(false)
   const autoJumpedRef = React.useRef(false)
@@ -67,9 +67,13 @@ const ContactInfoEditForm = () => {
 
   const keyboard = useKeyboard()
 
+  // Fetch personalInfo only once on mount if not already loaded
   useEffect(() => {
-    fetchPersonalInfo() // Fetch to get user's country
-  }, [fetchPersonalInfo])
+    if (!personalInfo) {
+      fetchPersonalInfo() // Fetch to get user's country
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array - only run once on mount
 
   useEffect(() => {
     if (error) toggleHideNavLinks(false)
@@ -120,7 +124,7 @@ const ContactInfoEditForm = () => {
   useEffect(() => {
     if (
       keyboard.keyboardShown &&
-      (emailInputShow || phoneInputShoow || addressInputShow) &&
+      (emailInputShow || phoneInputShow || addressInputShow) &&
       scrollViewRef.current &&
       !shouldScrollToTopRef.current
     ) {
@@ -133,7 +137,7 @@ const ContactInfoEditForm = () => {
   }, [
     keyboard.keyboardShown,
     emailInputShow,
-    phoneInputShoow,
+    phoneInputShow,
     addressInputShow,
   ])
 
@@ -338,7 +342,7 @@ const ContactInfoEditForm = () => {
   }
 
   const renderPhoneField = () => {
-    if (!phoneInputShoow) return null
+    if (!phoneInputShow) return null
     return (
       <View>
         <Text style={styles.inputHeader}>Phone Number</Text>
