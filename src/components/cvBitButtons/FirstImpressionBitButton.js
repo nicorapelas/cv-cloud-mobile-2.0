@@ -65,7 +65,7 @@ const FirstImpressionBitButton = () => {
       return <View style={styles.statusBed}>{renderStatusLoader()}</View>
     return (
       <View style={styles.statusBed}>
-        {firstImpressionStatus === '0' ? (
+        {firstImpressionStatus === null || firstImpressionStatus === 0 ? (
           <>
             <Text style={styles.percentage}>
               <Feather name="circle" size={24} />

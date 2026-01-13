@@ -11,6 +11,8 @@ import RegisterEmailScreen from './src/components/screens/authScreens/RegisterEm
 import LoginEmailScreen from './src/components/screens/authScreens/LoginEmailScreen'
 import PasswordForgotScreen from './src/components/screens/authScreens/PasswordForgotScreen'
 import MainScreen from './src/components/screens/mainScreens/MainScreen'
+import UpdateModal from './src/components/common/modals/UpdateModal'
+import { checkForUpdates } from './src/utils/versionCheck'
 
 const { width } = Dimensions.get('window')
 
@@ -28,6 +30,14 @@ const AppScreens = () => {
   const { setUserPlatformOS } = useContext(UniversalContext)
 
   const { fetchSystemSettings } = useContext(AdvertisementContext)
+
+  // Update check state
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
+  const [updateInfo, setUpdateInfo] = useState({
+    isForceUpdate: false,
+    updateUrl: 'market://details?id=com.cvcloud.app',
+    updateUrlWeb: 'https://play.google.com/store/apps/details?id=com.cvcloud.app',
+  })
 
   // Valid auth screens
   const validAuthScreens = ['registerOrLogin', 'registerEmail', 'loginEmail', 'passwordForgot']
@@ -64,6 +74,33 @@ const AppScreens = () => {
       fetchSystemSettings()
     }
   }, [user])
+
+  // Check for app updates on app launch (only once)
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const updateData = await checkForUpdates()
+        if (updateData.hasUpdate) {
+          setUpdateInfo({
+            isForceUpdate: updateData.isForceUpdate,
+            updateUrl: updateData.updateUrl,
+            updateUrlWeb: updateData.updateUrlWeb,
+          })
+          setShowUpdateModal(true)
+        }
+      } catch (error) {
+        console.error('Error checking for updates:', error)
+        // Silently fail - don't block app usage if version check fails
+      }
+    }
+
+    // Check for updates after a short delay to not block initial render
+    const timer = setTimeout(() => {
+      checkUpdate()
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, []) // Only run once on mount
 
 
   const initialScreenSelector = (screen) => {
@@ -107,6 +144,13 @@ const AppScreens = () => {
       <View style={styles.screenContainer}>
         {screenSelector(currentScreenToRender)}
       </View>
+      <UpdateModal
+        visible={showUpdateModal}
+        onDismiss={() => setShowUpdateModal(false)}
+        isForceUpdate={updateInfo.isForceUpdate}
+        updateUrl={updateInfo.updateUrl}
+        updateUrlWeb={updateInfo.updateUrlWeb}
+      />
     </View>
   )
 }

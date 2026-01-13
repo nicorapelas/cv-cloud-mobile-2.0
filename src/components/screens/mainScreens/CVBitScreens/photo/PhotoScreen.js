@@ -43,6 +43,7 @@ const PhotoScreen = () => {
   const fetchPhotosRef = useRef(fetchPhotos)
   const assignPhotoRef = useRef(assignPhoto)
   const setAssignedPhotoIdRef = useRef(setAssignedPhotoId)
+  const photosInitialized = useRef(false)
   
   // Keep refs updated with latest functions
   useEffect(() => {
@@ -50,30 +51,44 @@ const PhotoScreen = () => {
     assignPhotoRef.current = assignPhoto
     setAssignedPhotoIdRef.current = setAssignedPhotoId
   }, [fetchPhotos, assignPhoto, setAssignedPhotoId])
-  
+
+  // Initial fetch on mount if photos haven't been loaded
   useEffect(() => {
-    // Don't run auto-assign if we're in any loading state
+    if (photos === null && !loading && !photosInitialized.current) {
+      photosInitialized.current = true
+      fetchPhotosRef.current()
+    }
+  }, [photos, loading])
+
+  // Auto-assign logic - only depends on photos array, not loading states
+  useEffect(() => {
+    // Don't run if we're currently loading or assigning
     if (loading || photoAssignLoading) return
     
-    if (photos && photos.length > 0) {
-      const photoAssigned = photos.filter(ph => {
-        return ph && ph.assigned === true && ph._id
-      })
-      if (photoAssigned.length > 0 && photoAssigned[0] && photoAssigned[0]._id) {
-        setAssignedPhotoIdRef.current(photoAssigned[0]._id)
-        autoAssignAttempted.current = false // Reset if we find an assigned photo
-      } else if (!autoAssignAttempted.current) {
-        // If no photo is assigned and we haven't attempted yet, auto-assign the first photo
-        const firstPhoto = photos.find(ph => ph && ph._id)
-        if (firstPhoto && firstPhoto._id) {
-          autoAssignAttempted.current = true
-          assignPhotoRef.current(firstPhoto._id)
-        }
+    // Don't run if photos haven't loaded yet
+    if (!photos || photos.length === 0) return
+    
+    // Check if any photo is already assigned
+    const photoAssigned = photos.find(ph => ph && ph.assigned === true && ph._id)
+    
+    if (photoAssigned && photoAssigned._id) {
+      // Photo is already assigned, just set the ID
+      setAssignedPhotoIdRef.current(photoAssigned._id)
+      autoAssignAttempted.current = false // Reset flag when we find an assigned photo
+      return
+    }
+    
+    // No photo is assigned - auto-assign the first one (only once)
+    if (!autoAssignAttempted.current) {
+      const firstPhoto = photos.find(ph => ph && ph._id)
+      if (firstPhoto && firstPhoto._id) {
+        autoAssignAttempted.current = true
+        assignPhotoRef.current(firstPhoto._id)
       }
     }
-  }, [photos, photoAssignLoading, loading])
+  }, [photos]) // Only depend on photos array, not loading states
 
-  // Handle real-time updates - only run when lastUpdate changes, not when fetchPhotos changes
+  // Handle real-time updates - only run when lastUpdate changes
   useEffect(() => {
     // Don't fetch if we're in any loading state or if photos haven't loaded yet
     if (loading || photoAssignLoading || photos === null) {
@@ -94,7 +109,7 @@ const PhotoScreen = () => {
         fetchPhotosRef.current()
       }, 500)
     }
-  }, [lastUpdate, photoAssignLoading, loading, photos])
+  }, [lastUpdate]) // Only depend on lastUpdate, not loading states or photos
 
   const handlePressUsePhoto = (data) => {
     if (data && data._id) {
