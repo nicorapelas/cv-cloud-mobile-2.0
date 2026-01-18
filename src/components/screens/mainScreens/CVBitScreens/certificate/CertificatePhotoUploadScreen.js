@@ -103,38 +103,80 @@ const CertificatePhotoUploadScreen = () => {
   }
 
   const imageUpload = () => {
-    const { apiKey, signature, timestamp } = uploadSignature
+    if (!imageFile) {
+      console.error('CertificatePhotoUploadScreen: imageFile is null')
+      Alert.alert('Error', 'No image file selected')
+      return
+    }
+
+    if (!uploadSignature) {
+      console.error('CertificatePhotoUploadScreen: uploadSignature is null')
+      Alert.alert('Error', 'Upload signature not available')
+      return
+    }
+
+    const { apiKey, signature, timestamp, uploadPreset, folder, eager, eagerAsync } = uploadSignature
+    setImageUploading(true)
+    
     const data = new FormData()
-    if (imageFile) {
-      data.append('file', {
-        uri: imageFile.uri,
-        type: `documents/${imageFile.uri.split('.')[1]}`,
-        name: imageFile.name,
+    data.append('file', {
+      uri: imageFile.uri,
+      type: 'image/jpeg', // Always JPEG after processing
+      name: imageFile.name,
+    })
+    data.append('api_key', apiKey)
+    data.append('timestamp', timestamp)
+    data.append('signature', signature)
+    
+    // Include upload_preset if it was part of the signature
+    if (uploadPreset) {
+      data.append('upload_preset', uploadPreset)
+    }
+    
+    // Include folder if it was part of the signature (for signed uploads)
+    if (folder) {
+      data.append('folder', folder)
+    }
+    
+    // Include eager transformations if present (though not needed for certificates)
+    if (eager) {
+      data.append('eager', eager)
+    }
+    if (eagerAsync) {
+      data.append('eager_async', eagerAsync.toString())
+    }
+
+    fetch(keys.cloudinary.uploadImageUrl, {
+      method: 'post',
+      body: data,
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.text().then(text => {
+            console.error('CertificatePhotoUploadScreen: Response not OK', text)
+            throw new Error(`HTTP ${res.status}: ${text}`)
+          })
+        }
+        return res.json()
       })
-      data.append('api_key', apiKey)
-      data.append('timestamp', timestamp)
-      data.append('signature', signature)
-      fetch(keys.cloudinary.uploadImageUrl, {
-        method: 'post',
-        body: data,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.error) {
-            setImageUploading(false)
-            clearUploadSignature()
-            Alert.alert('Unable to upload image, please try again later')
-            setCVBitScreenSelected('')
-            return
-          }
-          handleCertificateCreate(data)
-        })
-        .catch((err) => {
-          Alert.alert('Unable to upload image, please try again later')
+      .then((data) => {
+        if (data.error) {
+          console.error('CertificatePhotoUploadScreen: Cloudinary error', data.error)
+          setImageUploading(false)
+          clearUploadSignature()
+          Alert.alert('Upload Error', `Unable to upload image: ${data.error.message || data.error}`)
           setCVBitScreenSelected('')
           return
-        })
-    }
+        }
+        handleCertificateCreate(data)
+      })
+      .catch((err) => {
+        console.error('CertificatePhotoUploadScreen: Upload failed', err)
+        setImageUploading(false)
+        clearUploadSignature()
+        Alert.alert('Upload Error', `Unable to upload image: ${err.message || 'Please try again later'}`)
+        setCVBitScreenSelected('')
+      })
   }
 
   const pickFromGallery = async () => {

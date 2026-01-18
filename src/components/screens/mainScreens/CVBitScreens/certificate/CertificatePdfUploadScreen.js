@@ -25,6 +25,7 @@ import InstructionModal from '../../../../common/modals/InstructionModal'
 const CertificatePdfUploadScreen = () => {
   const [title, setTitle] = useState(null)
   const [pdfUrl, setPdfUrl] = useState(null)
+  const [pdfFileName, setPdfFileName] = useState(null)
   const [documentName, setDocumentName] = useState(null)
   const [pdfUploading, setPdfUploading] = useState(false)
 
@@ -64,9 +65,9 @@ const CertificatePdfUploadScreen = () => {
     Date.now().toString()
 
   const createFileName = () => {
-    if (!pdfUrl || pdfUrl.type === 'canceled') return
-    const fileType = pdfUrl.split('.').pop()
-    setDocumentName(`${randomFileName}.${fileType}`)
+    if (!pdfUrl) return
+    // Always use .pdf extension since DocumentPicker only allows PDFs
+    setDocumentName(`${randomFileName}.pdf`)
   }
 
   const handleCertificateCreate = (data) => {
@@ -77,34 +78,67 @@ const CertificatePdfUploadScreen = () => {
     })
     setPdfUploading(false)
     setPdfUrl(null)
+    setPdfFileName(null)
     clearUploadSignature()
     setCVBitScreenSelected('certificate')
   }
 
   const documentUpload = async () => {
-    const { apiKey, signature, timestamp } = uploadSignature
+    if (!pdfUrl || !documentName) {
+      console.error('CertificatePdfUploadScreen: pdfUrl or documentName is null')
+      handleUploadError()
+      return
+    }
+
+    if (!uploadSignature) {
+      console.error('CertificatePdfUploadScreen: uploadSignature is null')
+      handleUploadError()
+      return
+    }
+
+    const { apiKey, signature, timestamp, uploadPreset, folder } = uploadSignature
     const data = new FormData()
-    const fileType = pdfUrl.split('.').pop()
     data.append('file', {
       uri: pdfUrl,
-      type: `application/${fileType}`,
+      type: 'application/pdf', // Always PDF since DocumentPicker only allows PDFs
       name: documentName,
     })
     data.append('api_key', apiKey)
     data.append('timestamp', timestamp)
     data.append('signature', signature)
+    
+    // Include upload_preset if it was part of the signature
+    if (uploadPreset) {
+      data.append('upload_preset', uploadPreset)
+    }
+    
+    // Include folder if it was part of the signature (for signed uploads)
+    if (folder) {
+      data.append('folder', folder)
+    }
+
     try {
       const response = await fetch(keys.cloudinary.uploadPdfUrl, {
         method: 'POST',
         body: data,
       })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('CertificatePdfUploadScreen: Response not OK', errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+      
       const result = await response.json()
+      
       if (result.error) {
+        console.error('CertificatePdfUploadScreen: Cloudinary error', result.error)
         handleUploadError()
         return
       }
       handleCertificateCreate(result)
     } catch (error) {
+      console.error('CertificatePdfUploadScreen: Upload failed', error)
       handleUploadError()
     } finally {
       setPdfUploading(false)
@@ -113,6 +147,7 @@ const CertificatePdfUploadScreen = () => {
 
   const handleUploadError = () => {
     setPdfUrl(null)
+    setPdfFileName(null)
     setPdfUploading(false)
     clearUploadSignature()
     Alert.alert('Unable to upload PDF, please try again later')
@@ -127,13 +162,14 @@ const CertificatePdfUploadScreen = () => {
     if (!result || result.canceled) {
       setCVBitScreenSelected('certificateCreate')
     } else {
-      const { uri } = result.assets[0]
+      const { uri, name } = result.assets[0]
       setPdfUrl(uri)
+      setPdfFileName(name || 'document.pdf') // Store file name for display
     }
   }
 
   const titleField = () => {
-    if (!pdfUrl || pdfUrl.type === 'canceled') return null
+    if (!pdfUrl) return null
     if (pdfUploading)
       return (
         <LoaderWithText
@@ -144,7 +180,7 @@ const CertificatePdfUploadScreen = () => {
     return (
       <View style={styles.textInputBed}>
         <MaterialIcons name="picture-as-pdf" style={styles.fileSelectedIcon} />
-        <Text style={styles.fileSelected}>{pdfUrl.name}</Text>
+        <Text style={styles.fileSelected}>{pdfFileName || 'document.pdf'}</Text>
         <TextInput
           style={styles.input}
           textAlign="center"

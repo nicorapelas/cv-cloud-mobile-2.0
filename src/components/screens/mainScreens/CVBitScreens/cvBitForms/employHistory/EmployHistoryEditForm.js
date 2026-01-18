@@ -81,9 +81,9 @@ const EmployHistoryEditForm = () => {
   useEffect(() => {
     if (!initStartDateDone) {
       if (startDate) {
-        const [startMonth, startYear] = startDate.split(' ')
-        setStartMonth(startMonth)
-        setStartYear(startYear)
+        const [month, year] = startDate.split(' ')
+        setStartMonth(month)
+        setStartYear(year)
         setInitStartDateDone(true)
       }
     }
@@ -91,10 +91,10 @@ const EmployHistoryEditForm = () => {
 
   useEffect(() => {
     if (!initEndDateDone) {
-      if (endMonth) {
-        const [endMonth, endYear] = endDate.split(' ')
-        setEndMonth(endMonth)
-        setEndYear(endYear)
+      if (endDate) {
+        const [month, year] = endDate.split(' ')
+        setEndMonth(month)
+        setEndYear(year)
         setInitEndDateDone(true)
       }
     }
