@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
+    backgroundColor: '#232936',
   },
   screenContainer: {
     ...StyleSheet.absoluteFillObject,

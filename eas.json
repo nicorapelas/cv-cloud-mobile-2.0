@@ -43,14 +43,19 @@
     }
   },
   "submit": {
+    "closed-testing": {
+      "android": {
+        "track": "alpha"
+      }
+    },
     "production": {
       "android": {
         "track": "internal"
       },
       "ios": {
-        "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-id",
-        "appleTeamId": "your-team-id"
+        "appleId": "nicorapelas@gmail.com",
+        "ascAppId": "1600222322",
+        "appleTeamId": "S82U2U4CLZ"
       }
     }
   }

@@ -6,13 +6,13 @@ import {
   Text,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native'
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons'
 import { VideoView, useVideoPlayer } from 'expo-video'
-import * as FileSystem from 'expo-file-system/legacy'
+import * as FileSystemLegacy from 'expo-file-system/legacy'
 import keys from '../../../../../../../config/keys'
 
-import LoaderWithText from '../../../../../common/LoaderWithText'
 import LoaderFullScreen from '../../../../../common/LoaderFullScreen'
 import { Context as FirstImpressionContext } from '../../../../../../context/FirstImpressionContext'
 import { Context as NavContext } from '../../../../../../context/NavContext'
@@ -22,6 +22,12 @@ const VideoPlaybackUpload = ({ videoObject }) => {
   const [videoFileName, setVideoFileName] = useState(null)
   const [loaderSubText, setLoaderSubText] = useState(0)
   const [uploadComplete, setUploadComplete] = useState(false)
+  const [videoFileSizeBytes, setVideoFileSizeBytes] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState({
+    percent: 0,
+    bytesSent: 0,
+    bytesTotal: 0,
+  })
 
   const {
     state: { loading, uploadSignature, videoUploading },
@@ -106,11 +112,211 @@ const VideoPlaybackUpload = ({ videoObject }) => {
   useEffect(() => {
     if (videoUploading) {
       const t = setTimeout(() => {
-        setLoaderSubText(loaderSubText + 1)
+        setLoaderSubText((prev) => prev + 1)
       }, 40000)
       return () => clearTimeout(t)
     }
-  }, [videoUploading])
+  }, [videoUploading, loaderSubText])
+
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes <= 0) return null
+    const mb = bytes / (1024 * 1024)
+    return `${mb.toFixed(2)} MB`
+  }
+
+  const uploadToCloudinaryWithProgress = async ({
+    url,
+    formData,
+    timeoutMs,
+    onProgress,
+  }) => {
+    // Prefer Expo's native upload task from the LEGACY API.
+    // In Expo SDK 54+, legacy methods imported from "expo-file-system" throw at runtime.
+    // Using `expo-file-system/legacy` avoids the iOS XHR onprogress limitation (0% forever).
+    // Fall back to XHR if unavailable or if task upload fails to start.
+    const canUseUploadTask =
+      typeof FileSystemLegacy?.createUploadTask === 'function' &&
+      FileSystemLegacy?.FileSystemUploadType?.MULTIPART &&
+      FileSystemLegacy?.FileSystemSessionType?.FOREGROUND
+
+    if (canUseUploadTask) {
+      // We expect `formData` to be a React Native FormData instance whose _parts we can read.
+      // We'll convert it to Expo FileSystem multipart parameters + a fileUri.
+      try {
+        const parts = Array.isArray(formData?._parts) ? formData._parts : []
+        let fileUri = null
+        let mimeType = null
+        const parameters = {}
+
+        for (const part of parts) {
+          const key = part?.[0]
+          const value = part?.[1]
+          if (!key) continue
+
+          if (key === 'file' && value && typeof value === 'object') {
+            // value: { uri, type, name }
+            if (typeof value.uri === 'string') fileUri = value.uri
+            if (typeof value.type === 'string') mimeType = value.type
+          } else if (value === null || value === undefined) {
+            // skip
+          } else {
+            // FileSystem multipart parameters must be string values
+            parameters[key] = String(value)
+          }
+        }
+
+        if (typeof fileUri === 'string' && fileUri.length > 0) {
+          const uploadTask = FileSystemLegacy.createUploadTask(
+            url,
+            fileUri,
+            {
+              httpMethod: 'POST',
+              uploadType: FileSystemLegacy.FileSystemUploadType.MULTIPART,
+              fieldName: 'file',
+              parameters,
+              // Ensure progress events fire while app is active (best UX for an in-app progress bar).
+              sessionType: FileSystemLegacy.FileSystemSessionType.FOREGROUND,
+              ...(mimeType ? { mimeType } : {}),
+            },
+            (progress) => {
+              try {
+                if (!onProgress) return
+                const loaded = progress?.totalBytesSent ?? 0
+                const total = progress?.totalBytesExpectedToSend ?? 0
+                // Note: total can be -1 if unknown; treat as not computable and fall back in UI.
+                onProgress({
+                  loaded,
+                  total,
+                  lengthComputable: typeof total === 'number' && total > 0,
+                })
+              } catch (err) {
+                // Never fail upload due to progress UI issues
+              }
+            }
+          )
+
+          // Optional timeout: if we can cancel, try to cancel; otherwise just let it run.
+          let timeoutId = null
+          const cleanup = () => {
+            if (timeoutId) clearTimeout(timeoutId)
+            timeoutId = null
+          }
+
+          const uploadPromise = uploadTask.uploadAsync().then((result) => {
+            cleanup()
+            const status = result?.status ?? 0
+            const body = result?.body ?? ''
+            if (!status || status < 200 || status >= 300) {
+              throw new Error(
+                `Upload failed: ${status} ${result?.headers?.statusText || ''}`.trim()
+              )
+            }
+            try {
+              return body ? JSON.parse(body) : null
+            } catch (err) {
+              throw new Error('Upload succeeded but response could not be parsed')
+            }
+          })
+
+          if (timeoutMs && timeoutMs > 0) {
+            timeoutId = setTimeout(async () => {
+              try {
+                // cancelAsync exists on some SDKs/runtimes; guard it.
+                if (typeof uploadTask?.cancelAsync === 'function') {
+                  await uploadTask.cancelAsync()
+                }
+              } catch (err) {
+                // ignore
+              }
+            }, timeoutMs)
+          }
+
+          return await uploadPromise
+        }
+      } catch (err) {
+        // Fall back to XHR below
+      }
+    }
+
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      let timeoutId = null
+
+      const cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = null
+      }
+
+      try {
+        xhr.open('POST', url)
+      } catch (err) {
+        cleanup()
+        reject(err)
+        return
+      }
+
+      // Upload progress (byte-level)
+      if (xhr.upload) {
+        xhr.upload.onprogress = (event) => {
+          try {
+            if (!onProgress) return
+            const loaded = event?.loaded ?? 0
+            const total = event?.total ?? 0
+            const lengthComputable = !!event?.lengthComputable
+            onProgress({ loaded, total, lengthComputable })
+          } catch (err) {
+            // Never fail upload due to progress UI issues
+          }
+        }
+      }
+
+      xhr.onerror = () => {
+        cleanup()
+        reject(new Error('Network request failed'))
+      }
+
+      xhr.onabort = () => {
+        cleanup()
+        const err = new Error('Upload aborted')
+        err.name = 'AbortError'
+        reject(err)
+      }
+
+      xhr.onload = () => {
+        cleanup()
+        const status = xhr.status
+        const responseText = xhr.responseText
+
+        if (!status || status < 200 || status >= 300) {
+          reject(new Error(`Upload failed: ${status} ${xhr.statusText || ''}`.trim()))
+          return
+        }
+
+        try {
+          const parsed = responseText ? JSON.parse(responseText) : null
+          resolve(parsed)
+        } catch (err) {
+          reject(new Error('Upload succeeded but response could not be parsed'))
+        }
+      }
+
+      // Manual timeout (XHR timeout is inconsistent across RN runtimes)
+      timeoutId = setTimeout(() => {
+        try {
+          xhr.abort()
+        } catch (err) {
+          // ignore
+        }
+      }, timeoutMs)
+
+      try {
+        xhr.send(formData)
+      } catch (err) {
+        cleanup()
+        reject(err)
+      }
+    })
+  }
 
   const videoUpload = async () => {
     console.log('[Video Upload] ===== UPLOAD FUNCTION CALLED =====')
@@ -134,13 +340,18 @@ const VideoPlaybackUpload = ({ videoObject }) => {
     console.log('[Video Upload] - Folder:', folder || 'none')
 
     try {
+      // Reset progress UI each upload
+      setUploadProgress({ percent: 0, bytesSent: 0, bytesTotal: 0 })
+      setUploadComplete(false)
+
       let videoUri = videoObject.uri
       let videoType = 'video/mp4' // Default to mp4
+      let localFileSizeBytes = null
 
       // On Android, we need to handle the file URI properly
       if (Platform.OS === 'android') {
         // Get file info to determine proper type
-        const fileInfo = await FileSystem.getInfoAsync(videoUri)
+        const fileInfo = await FileSystemLegacy.getInfoAsync(videoUri)
 
         // Determine video type from URI
         const uriParts = videoUri.split('.')
@@ -218,8 +429,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
       console.log('[Video Upload] Final video URI:', finalVideoUri)
       
       try {
-        if (Platform.OS === 'android') {
-          const fileInfo = await FileSystem.getInfoAsync(finalVideoUri)
+        const fileInfo = await FileSystemLegacy.getInfoAsync(finalVideoUri)
           console.log('[Video Upload] File info before upload:', {
             exists: fileInfo.exists,
             size: fileInfo.size,
@@ -232,8 +442,13 @@ const VideoPlaybackUpload = ({ videoObject }) => {
           if (fileInfo.size === 0) {
             throw new Error('Video file is empty (0 bytes)')
           }
-          console.log('[Video Upload] File size:', (fileInfo.size / (1024 * 1024)).toFixed(2), 'MB')
-        }
+        localFileSizeBytes = fileInfo.size
+          setVideoFileSizeBytes(fileInfo.size)
+          console.log(
+            '[Video Upload] File size:',
+            (fileInfo.size / (1024 * 1024)).toFixed(2),
+            'MB'
+          )
       } catch (fileCheckError) {
         console.log('[Video Upload] ❌ ERROR: File check failed:', fileCheckError.message)
         throw new Error('Cannot access video file: ' + fileCheckError.message)
@@ -258,57 +473,75 @@ const VideoPlaybackUpload = ({ videoObject }) => {
       console.log('[Video Upload] FormData entries count:', data._parts?.length || 'unknown')
       console.log('[Video Upload] Video type:', videoType)
 
-      // Create AbortController for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        console.log('[Video Upload] ❌ ERROR: Upload timeout after 10 minutes')
-        controller.abort()
-      }, 10 * 60 * 1000) // 10 minutes timeout
-
       const startTime = Date.now()
-      console.log('[Video Upload] Sending fetch request...')
+      console.log('[Video Upload] Sending upload request (XHR with progress)...')
       
-      let response
-      try {
-        response = await fetch(keys.cloudinary.uploadVideoUrl, {
-          method: 'POST',
-          body: data,
-          signal: controller.signal,
-          // Don't set Content-Type - React Native will set it with boundary automatically
-        })
-        console.log('[Video Upload] Fetch request completed')
-      } catch (fetchError) {
-        console.log('[Video Upload] ❌ ERROR: Fetch request failed')
-        console.log('[Video Upload] Error name:', fetchError.name)
-        console.log('[Video Upload] Error message:', fetchError.message)
-        console.log('[Video Upload] Error code:', fetchError.code)
-        console.log('[Video Upload] Error cause:', fetchError.cause)
-        
-        // Check if it's a network error
-        if (fetchError.message === 'Network request failed' || fetchError.name === 'TypeError') {
-          console.log('[Video Upload] Network error detected - possible causes:')
-          console.log('[Video Upload] - No internet connection')
-          console.log('[Video Upload] - Cloudinary API unreachable')
-          console.log('[Video Upload] - Request too large')
-          console.log('[Video Upload] - SSL/TLS certificate issue')
-          throw new Error('Network error: Please check your internet connection and try again. If the problem persists, the video file may be too large.')
-        }
-        throw fetchError
-      }
+      const responseData = await uploadToCloudinaryWithProgress({
+        url: keys.cloudinary.uploadVideoUrl,
+        formData: data,
+        timeoutMs: 10 * 60 * 1000,
+        onProgress: ({ loaded, total, lengthComputable }) => {
+          // NOTE:
+          // In React Native / Android, `lengthComputable` is often false even when `total` is present.
+          // Also, `loaded` can represent multipart request bytes (file + form-data overhead), so it can
+          // exceed the raw file size. To avoid "sent > total" we must derive numerator/denominator
+          // from the same measurement (prefer XHR totals, fall back to file size).
+          const loadedSafe = typeof loaded === 'number' && loaded > 0 ? loaded : 0
+          const eventTotalSafe = typeof total === 'number' && total > 0 ? total : 0
+          const fileTotalSafe =
+            typeof localFileSizeBytes === 'number' && localFileSizeBytes > 0
+              ? localFileSizeBytes
+              : 0
 
-      clearTimeout(timeoutId)
+          setUploadProgress((prev) => {
+            const prevTotal =
+              typeof prev?.bytesTotal === 'number' && prev.bytesTotal > 0
+                ? prev.bytesTotal
+                : 0
+
+            // Prefer XHR reported total when available, otherwise fall back to file size.
+            const baseTotal =
+              eventTotalSafe > 0
+                ? Math.max(prevTotal, eventTotalSafe)
+                : fileTotalSafe > 0
+                  ? Math.max(prevTotal, fileTotalSafe)
+                  : prevTotal
+
+            // Final fallback if we have no total yet but do have loaded bytes.
+            const bytesTotal = baseTotal > 0 ? baseTotal : loadedSafe
+
+            // Clamp for UI sanity: never show sent > total.
+            const bytesSent =
+              bytesTotal > 0 ? Math.min(loadedSafe, bytesTotal) : loadedSafe
+
+            const percent =
+              bytesTotal > 0
+                ? Math.min(
+                    99,
+                    Math.max(0, Math.floor((bytesSent / bytesTotal) * 100))
+                  )
+                : 0
+
+            return {
+              percent,
+              bytesSent,
+              bytesTotal,
+            }
+          })
+        },
+      })
+
       const uploadDuration = ((Date.now() - startTime) / 1000).toFixed(2)
       console.log('[Video Upload] Upload completed in', uploadDuration, 'seconds')
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.log('[Video Upload] ❌ ERROR: Response not OK')
-        console.log('[Video Upload] Status:', response.status, response.statusText)
-        console.log('[Video Upload] Error response:', errorText)
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
-      }
-
-      const responseData = await response.json()
+      setUploadProgress((prev) => ({
+        ...prev,
+        percent: 100,
+        // Keep the final "sent / total" display consistent.
+        bytesSent:
+          typeof prev?.bytesTotal === 'number' && prev.bytesTotal > 0
+            ? prev.bytesTotal
+            : prev?.bytesSent ?? 0,
+      }))
       console.log('[Video Upload] Cloudinary response received:')
       console.log('[Video Upload] - Has secure_url:', !!responseData.secure_url)
       console.log('[Video Upload] - Has public_id:', !!responseData.public_id)
@@ -422,15 +655,45 @@ const VideoPlaybackUpload = ({ videoObject }) => {
       return 'slow network detected... please be patient, almost done'
   }
 
+  const renderUploadProgress = () => {
+    const pct = uploadProgress?.percent ?? 0
+    const sent = uploadProgress?.bytesSent ?? 0
+    const total = uploadProgress?.bytesTotal ?? 0
+
+    const sentText = formatBytes(sent)
+    const totalText = formatBytes(total || videoFileSizeBytes)
+    const fileSizeText = formatBytes(videoFileSizeBytes)
+    const mainStatusText = pct >= 99 && pct < 100 ? 'Verifying upload' : 'uploading video'
+
+    return (
+      <View style={styles.uploadProgressBed}>
+        <ActivityIndicator size="small" color="#ededed" />
+        <Text style={styles.uploadMainText}>{mainStatusText}</Text>
+        <Text style={styles.uploadSubText}>{renderLoaderSubText()}</Text>
+
+        <View style={styles.progressBarOuter}>
+          <View
+            style={[
+              styles.progressBarInner,
+              { width: `${Math.max(0, Math.min(100, pct))}%` },
+            ]}
+          />
+        </View>
+
+        <Text style={styles.progressText}>
+          {pct}%{sentText ? ` • ${sentText}` : ''}{totalText ? ` / ${totalText}` : ''}
+        </Text>
+        {fileSizeText ? (
+          <Text style={styles.progressMetaText}>file size: {fileSizeText}</Text>
+        ) : null}
+      </View>
+    )
+  }
+
   const renderContent = () => {
     if (!videoObject) return null
     if (videoUploading)
-      return (
-        <LoaderWithText
-          mainText="uploading video"
-          subText={renderLoaderSubText()}
-        />
-      )
+      return renderUploadProgress()
     if (loading) return <LoaderFullScreen />
     if (!player) return null
     return (
@@ -510,7 +773,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
               if (Platform.OS === 'android' && videoObject?.uri) {
                 try {
                   console.log('[Video Upload] Checking file size on Android...')
-                  const fileInfo = await FileSystem.getInfoAsync(
+                  const fileInfo = await FileSystemLegacy.getInfoAsync(
                     videoObject.uri
                   )
                   console.log('[Video Upload] File info:', JSON.stringify(fileInfo))
@@ -560,6 +823,54 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     backgroundColor: '#232936',
+  },
+  uploadProgressBed: {
+    backgroundColor: '#232936',
+    flex: 1,
+    justifyContent: 'center',
+    width: '100%',
+    paddingHorizontal: 22,
+  },
+  uploadMainText: {
+    color: '#278ACD',
+    fontSize: 18,
+    marginTop: 12,
+    alignSelf: 'center',
+  },
+  uploadSubText: {
+    width: '85%',
+    color: '#278ACD',
+    fontSize: 15,
+    marginTop: 13,
+    alignSelf: 'center',
+    textAlign: 'center',
+  },
+  progressBarOuter: {
+    height: 10,
+    width: '100%',
+    marginTop: 18,
+    borderRadius: 8,
+    backgroundColor: '#1a1f2a',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  progressBarInner: {
+    height: '100%',
+    backgroundColor: '#278ACD',
+    borderRadius: 8,
+  },
+  progressText: {
+    marginTop: 10,
+    color: '#ededed',
+    alignSelf: 'center',
+    fontSize: 13,
+  },
+  progressMetaText: {
+    marginTop: 6,
+    color: 'rgba(237,237,237,0.75)',
+    alignSelf: 'center',
+    fontSize: 12,
   },
   video: {
     alignSelf: 'center',
