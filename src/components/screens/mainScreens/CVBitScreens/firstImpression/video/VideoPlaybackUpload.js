@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useMemo, useRef } from 'react'
 import {
   View,
   StyleSheet,
@@ -23,6 +23,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
   const [loaderSubText, setLoaderSubText] = useState(0)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [videoFileSizeBytes, setVideoFileSizeBytes] = useState(null)
+  const [playerResetNonce, setPlayerResetNonce] = useState(0)
   const [uploadProgress, setUploadProgress] = useState({
     percent: 0,
     bytesSent: 0,
@@ -40,47 +41,67 @@ const VideoPlaybackUpload = ({ videoObject }) => {
 
   const { setCVBitScreenSelected, setNavTabSelected } = useContext(NavContext)
 
-  const player = useVideoPlayer(
-    videoObject?.uri ? { uri: videoObject.uri } : undefined
+  const playbackUri = videoObject?.uri || null
+  const playerSource = useMemo(
+    // NOTE: Some Android devices can get into "audio-only" state after surface interruption.
+    // Including a nonce forces the hook to re-create the underlying player when we increment it.
+    () => (playbackUri ? { uri: playbackUri } : undefined),
+    [playbackUri, playerResetNonce]
   )
+  const player = useVideoPlayer(playerSource)
 
   useEffect(() => {
-    if (videoObject?.uri) {
-      const randomFileName =
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15) +
-        Date.now().toString()
-      setVideoFileName(`${randomFileName}.${videoObject.uri.split('.')[1]}`)
-      if (player) {
-        // Check if player is still valid before using it
-        try {
-          player.replaceAsync({ uri: videoObject.uri }).then(() => {
-            if (player) {
-              player.loop = true
-            }
-          }).catch((error) => {
-            console.log('Error replacing video:', error)
-          })
-        } catch (error) {
-          console.log('Error accessing player:', error)
-        }
-      }
+    if (!videoObject?.uri) return
+
+    const randomFileName =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Date.now().toString()
+
+    const ext = videoObject.uri.split('.').pop() || 'mp4'
+    setVideoFileName(`${randomFileName}.${ext}`)
+  }, [videoObject?.uri])
+
+  // Expo Video can "release" shared objects during fast source switches.
+  // When that happens, `player` can temporarily become an invalid handle (e.g. a number),
+  // and passing it to <VideoView> or calling methods on it will throw.
+  const isPlayerReady =
+    player &&
+    typeof player === 'object' &&
+    typeof player.play === 'function' &&
+    typeof player.pause === 'function'
+
+  useEffect(() => {
+    if (!isPlayerReady) return
+    try {
+      player.loop = true
+    } catch (error) {
+      // ignore
     }
+  }, [isPlayerReady, player])
+
+  // IMPORTANT:
+  // Context action functions can be recreated between renders.
+  // If we put them in an effect dependency array, React will run cleanup every render,
+  // and calling `setVideoUploading(false)` inside cleanup can cause an infinite update loop.
+  const setVideoUploadingRef = useRef(setVideoUploading)
+  useEffect(() => {
+    setVideoUploadingRef.current = setVideoUploading
+  }, [setVideoUploading])
+
+  useEffect(() => {
+    // On unmount only, ensure upload state is reset.
     return () => {
-      setVideoUploading(false)
-      // Cleanup: pause player if it exists
-      if (player) {
-        try {
-          player.pause()
-        } catch (error) {
-          console.log('Error pausing player on cleanup:', error)
-        }
+      try {
+        setVideoUploadingRef.current?.(false)
+      } catch (err) {
+        // ignore
       }
     }
-  }, [videoObject?.uri, player])
+  }, [])
 
   useEffect(() => {
-    if (!player) return
+    if (!isPlayerReady) return
 
     let subscription = null
     try {
@@ -100,7 +121,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
         }
       }
     }
-  }, [player])
+  }, [isPlayerReady, player])
 
   useEffect(() => {
     if (uploadSignature) {
@@ -318,6 +339,35 @@ const VideoPlaybackUpload = ({ videoObject }) => {
     })
   }
 
+  const getPersistedUri = () => {
+    return videoObject?.persistedUri || null
+  }
+
+  const isPersistedRecordingUri = (uri) => {
+    const baseDir = FileSystemLegacy?.documentDirectory
+    if (!baseDir || !uri || typeof uri !== 'string') return false
+    return (
+      uri.startsWith(baseDir) &&
+      uri.includes('first-impression-recordings/')
+    )
+  }
+
+  const deletePersistedRecordingIfNeeded = async () => {
+    const uri = getPersistedUri()
+    if (!isPersistedRecordingUri(uri)) return
+    try {
+      await FileSystemLegacy.deleteAsync(uri, { idempotent: true })
+    } catch (err) {
+      // Best-effort cleanup only
+    }
+  }
+
+  const forcePlayerRemount = () => {
+    // Reset playing state and bump nonce to force player + surface remount.
+    setIsPlaying(false)
+    setPlayerResetNonce((n) => n + 1)
+  }
+
   const videoUpload = async () => {
     console.log('[Video Upload] ===== UPLOAD FUNCTION CALLED =====')
     const {
@@ -410,7 +460,8 @@ const VideoPlaybackUpload = ({ videoObject }) => {
       }
 
       // Verify file URI is accessible before upload
-      let finalVideoUri = Platform.OS === 'android' ? videoUri : videoObject.uri
+      const uploadUri = videoObject?.persistedUri || videoObject?.uri
+      let finalVideoUri = Platform.OS === 'android' ? uploadUri : uploadUri
       console.log('[Video Upload] Verifying file accessibility...')
       console.log('[Video Upload] Original video URI:', finalVideoUri)
       
@@ -554,14 +605,16 @@ const VideoPlaybackUpload = ({ videoObject }) => {
         console.log('[Video Upload] ❌ ERROR: Cloudinary returned error')
         console.log('[Video Upload] Error details:', JSON.stringify(responseData.error))
         setVideoUploading(false)
-        clearVideoObject()
         setLoaderSubText(0)
         clearUploadSignature()
+        setUploadProgress({ percent: 0, bytesSent: 0, bytesTotal: 0 })
         Alert.alert(
           'Unable to upload video',
-          responseData.error.message || 'Please try again later'
+          (responseData.error.message || 'Please try again later') +
+            '\n\nYour recording has been kept so you can try uploading again.'
         )
-        setCVBitScreenSelected('')
+        // Some Android devices can lose the video surface after this transition.
+        forcePlayerRemount()
         return
       }
 
@@ -594,6 +647,8 @@ const VideoPlaybackUpload = ({ videoObject }) => {
           console.log('[Video Upload] ✅ First impression created successfully')
           console.log('[Video Upload] ===== UPLOAD COMPLETE =====')
           setVideoUploading(false)
+          // Upload succeeded; safe to clean up persisted local recording (best-effort).
+          deletePersistedRecordingIfNeeded()
           clearVideoObject()
           setLoaderSubText(0)
           clearUploadSignature()
@@ -611,18 +666,24 @@ const VideoPlaybackUpload = ({ videoObject }) => {
       console.log('[Video Upload] Error type:', typeof err)
       console.log('[Video Upload] Error keys:', Object.keys(err))
       
+      const retryHint =
+        '\n\nYour recording has been kept so you can try uploading again.'
+
       // Check if it's a timeout/abort error
       if (err.name === 'AbortError' || err.message.includes('timeout')) {
         console.log('[Video Upload] Timeout error detected')
         Alert.alert(
           'Upload timeout',
-          'The video upload took too long. Please check your internet connection and try again with a shorter video or better network connection.'
+          'The video upload took too long. Please check your internet connection and try again with a shorter video or better network connection.' +
+            retryHint
         )
       } else if (err.message.includes('Network') || err.message.includes('network')) {
         console.log('[Video Upload] Network error detected')
         Alert.alert(
           'Network error',
-          err.message || 'Please check your internet connection and try again. If the video is very large, try recording a shorter video.'
+          (err.message ||
+            'Please check your internet connection and try again. If the video is very large, try recording a shorter video.') +
+            retryHint
         )
       } else if (err.message.includes('file') || err.message.includes('File')) {
         console.log('[Video Upload] File access error detected')
@@ -634,15 +695,17 @@ const VideoPlaybackUpload = ({ videoObject }) => {
         console.log('[Video Upload] Other error detected')
         Alert.alert(
           'Unable to upload video',
-          err.message || 'Please check your internet connection and try again'
+          (err.message || 'Please check your internet connection and try again') +
+            retryHint
         )
       }
       
       setVideoUploading(false)
-      clearVideoObject()
       setLoaderSubText(0)
       clearUploadSignature()
-      setCVBitScreenSelected('')
+      setUploadProgress({ percent: 0, bytesSent: 0, bytesTotal: 0 })
+      // Ensure video surface is healthy after a failed upload (Android quirk).
+      forcePlayerRemount()
       console.log('[Video Upload] ===== UPLOAD FAILED =====')
     }
   }
@@ -690,26 +753,34 @@ const VideoPlaybackUpload = ({ videoObject }) => {
     )
   }
 
+  const renderUploadOverlay = () => {
+    return (
+      <View style={styles.uploadOverlay} pointerEvents="auto">
+        {renderUploadProgress()}
+      </View>
+    )
+  }
+
   const renderContent = () => {
     if (!videoObject) return null
-    if (videoUploading)
-      return renderUploadProgress()
     if (loading) return <LoaderFullScreen />
-    if (!player) return null
+    if (!isPlayerReady) return null
     return (
       <View style={styles.videoBed}>
         <VideoView
+          key={`${playbackUri || 'no-uri'}:${playerResetNonce}`}
           player={player}
           style={styles.video}
           nativeControls
           contentFit="contain"
           fullscreenOptions={{ enterFullscreenButtonVisible: true }}
         />
+        {videoUploading ? renderUploadOverlay() : null}
         <View style={styles.buttonsBed}>
           <TouchableOpacity
             style={styles.playButton}
             onPress={() => {
-              if (!player) return
+              if (!isPlayerReady) return
               try {
                 if (isPlaying) {
                   player.pause()
@@ -720,6 +791,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
                 console.log('Error controlling player:', error)
               }
             }}
+            disabled={videoUploading}
           >
             {isPlaying ? (
               <MaterialIcons
@@ -732,7 +804,12 @@ const VideoPlaybackUpload = ({ videoObject }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={() => clearVideoObject()}
+            onPress={async () => {
+              // If the recording was persisted, delete it when user explicitly discards.
+              await deletePersistedRecordingIfNeeded()
+              clearVideoObject()
+            }}
+            disabled={videoUploading}
           >
             <MaterialCommunityIcons
               name="delete-circle"
@@ -752,7 +829,7 @@ const VideoPlaybackUpload = ({ videoObject }) => {
           <TouchableOpacity
             onPress={async () => {
               // Pause video when upload starts
-              if (player && isPlaying) {
+              if (isPlayerReady && isPlaying) {
                 try {
                   player.pause()
                 } catch (error) {
@@ -824,9 +901,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#232936',
   },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(35,41,54,0.92)',
+    justifyContent: 'center',
+  },
   uploadProgressBed: {
-    backgroundColor: '#232936',
-    flex: 1,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     width: '100%',
     paddingHorizontal: 22,

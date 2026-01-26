@@ -5,6 +5,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  Platform,
 } from 'react-native'
 import { Octicons, MaterialCommunityIcons } from '@expo/vector-icons'
 
@@ -49,10 +50,28 @@ const InterestScreen = () => {
           renderItem={({ item }) => {
             return (
               <View style={styles.container}>
-                <View style={styles.titleBed}>
+                <View
+                  style={[
+                    styles.titleBed,
+                    Platform.OS === 'ios' ? styles.titleBedIos : null,
+                  ]}
+                >
                   <View style={styles.titleContainer}>
-                    <Octicons style={styles.point} name="dot-fill" />
-                    <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                    <Octicons
+                      style={[
+                        styles.point,
+                        Platform.OS === 'ios' ? styles.pointIos : null,
+                      ]}
+                      name="dot-fill"
+                    />
+                    <Text
+                      style={[
+                        styles.title,
+                        Platform.OS === 'ios' ? styles.titleIos : null,
+                      ]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {item.interest}
                     </Text>
                   </View>
@@ -138,6 +157,9 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     marginRight: 10,
   },
+  titleBedIos: {
+    paddingTop: 5,
+  },
   titleContainer: {
     flexDirection: 'row',
     flex: 1,
@@ -146,11 +168,17 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     fontSize: 16,
   },
+  pointIos: {
+    paddingTop: 8,
+  },
   title: {
     fontSize: 20,
     paddingLeft: 10,
     flex: 1,
     flexShrink: 1,
+  },
+  titleIos: {
+    paddingTop: 3,
   },
   buttonBed: {
     backgroundColor: '#232936',

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Keyboard,
+  Platform,
   KeyboardAvoidingView,
 } from 'react-native'
 import { useKeyboard } from '@react-native-community/hooks'
@@ -30,6 +31,7 @@ const AttributeCreateForm = ({ bit }) => {
   const [attributeArray, setAttributeArray] = useState([])
   const scrollViewRef = React.useRef(null)
   const inputRef = React.useRef(null)
+  const [attributeInputFocused, setAttributeInputFocused] = useState(false)
 
   const {
     state: { loading, error, attributes },
@@ -129,20 +131,30 @@ const AttributeCreateForm = ({ bit }) => {
 
   const renderAttributeArray = () => {
     if (!attributeArray || attributeArray.length < 1) return null
-    return attributeArray.map((att) => {
-      return (
-        <View style={styles.itemListBed} key={att.key}>
-          <Text style={styles.itemList}>{att.attribute}</Text>
-          <TouchableOpacity style={styles.deleteButton}>
-            <MaterialCommunityIcons
-              style={styles.deleteButtonIcon}
-              name="delete"
-              onPress={() => removeArrayItem(att.key)}
-            />
-          </TouchableOpacity>
-        </View>
-      )
-    })
+    return (
+      <View
+        style={[
+          Platform.OS === 'ios' && !attributeInputFocused
+            ? styles.attributeListIos
+            : null,
+        ]}
+      >
+        {attributeArray.map((att) => {
+          return (
+            <View style={styles.itemListBed} key={att.key}>
+              <Text style={styles.itemList}>{att.attribute}</Text>
+              <TouchableOpacity style={styles.deleteButton}>
+                <MaterialCommunityIcons
+                  style={styles.deleteButtonIcon}
+                  name="delete"
+                  onPress={() => removeArrayItem(att.key)}
+                />
+              </TouchableOpacity>
+            </View>
+          )
+        })}
+      </View>
+    )
   }
 
   const handleSave = () => {
@@ -240,6 +252,7 @@ const AttributeCreateForm = ({ bit }) => {
           value={attribute}
           onChangeText={setAttribute}
           onFocus={() => {
+            setAttributeInputFocused(true)
             tipSelectReset()
             clearAttributeErrors()
             // Scroll to end when input is focused
@@ -248,6 +261,9 @@ const AttributeCreateForm = ({ bit }) => {
                 scrollViewRef.current.scrollToEnd({ animated: true })
               }
             }, 300)
+          }}
+          onBlur={() => {
+            setAttributeInputFocused(false)
           }}
           autoCorrect={true}
           autoFocus={!error ? true : false}
@@ -407,6 +423,9 @@ const styles = StyleSheet.create({
     color: '#ffff',
     fontSize: 20,
     padding: 7,
+  },
+  attributeListIos: {
+    marginTop: 120,
   },
 })
 

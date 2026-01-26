@@ -118,7 +118,12 @@ const LanguageCreateForm = () => {
   const renderPreview = () => {
     if (!saveButtonShow) return null
     return (
-      <View style={styles.previewBed}>
+      <View
+        style={[
+          styles.previewBed,
+          Platform.OS === 'ios' ? styles.previewBedIos : null,
+        ]}
+      >
         <View style={styles.headingBed}>
           <Octicons style={styles.point} name="dot-fill" />
           <Text style={styles.previewHeading}>{language}</Text>
@@ -226,7 +231,11 @@ const LanguageCreateForm = () => {
   const writeProficiencyInput = () => {
     if (!writeProficiencyInputShow) return null
     return (
-      <>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.proficiencyInputIos : null,
+        ]}
+      >
         <Text style={styles.heading}>How well do you write in {language}?</Text>
         <RadioProficiencyButton
           bit="language"
@@ -278,14 +287,18 @@ const LanguageCreateForm = () => {
             />
           </TouchableOpacity>
         </View>
-      </>
+      </View>
     )
   }
 
   const readProficiencyInput = () => {
     if (!readProficiencyInputShow) return null
     return (
-      <>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.proficiencyInputIos : null,
+        ]}
+      >
         <Text style={styles.heading}>How well do you read {language}?</Text>
         <RadioProficiencyButton
           bit="language"
@@ -337,14 +350,18 @@ const LanguageCreateForm = () => {
             />
           </TouchableOpacity>
         </View>
-      </>
+      </View>
     )
   }
 
   const speakProficiencyInput = () => {
     if (!speakProficiencyInputShow) return null
     return (
-      <>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.proficiencyInputIos : null,
+        ]}
+      >
         <Text style={styles.heading}>How well do you speak {language}?</Text>
         <RadioProficiencyButton
           bit="language"
@@ -396,7 +413,7 @@ const LanguageCreateForm = () => {
             />
           </TouchableOpacity>
         </View>
-      </>
+      </View>
     )
   }
 
@@ -614,6 +631,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'center',
     marginHorizontal: 5,
+  },
+  proficiencyInputIos: {
+    marginTop: 120,
+  },
+  previewBedIos: {
+    marginTop: 120,
   },
 })
 

@@ -9,6 +9,7 @@ import {
 import { CameraView, Camera } from 'expo-camera'
 import { Audio } from 'expo-audio'
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
+import * as FileSystemLegacy from 'expo-file-system/legacy'
 
 import { Context as FirstImpressionContext } from '../../../../../context/FirstImpressionContext'
 import { Context as UniversalContext } from '../../../../../context/UniversalContext'
@@ -37,6 +38,42 @@ const FirstImpressionCreateScreen = () => {
 
   const { toggleInstructionModal } = useContext(UniversalContext)
   const { setCVBitScreenSelected } = useContext(NavContext)
+
+  const ensureFirstImpressionRecordingDir = async () => {
+    const baseDir = FileSystemLegacy.documentDirectory
+    if (!baseDir) return null
+    const recordingsDir = `${baseDir}first-impression-recordings/`
+    try {
+      await FileSystemLegacy.makeDirectoryAsync(recordingsDir, {
+        intermediates: true,
+      })
+    } catch (err) {
+      // Directory may already exist; ignore.
+    }
+    return recordingsDir
+  }
+
+  const persistRecordedVideoAsync = async (video) => {
+    const sourceUri = video?.uri
+    if (!sourceUri || typeof sourceUri !== 'string') return null
+
+    const recordingsDir = await ensureFirstImpressionRecordingDir()
+    if (!recordingsDir) return null
+
+    const extension = sourceUri.split('.').pop() || 'mp4'
+    const safeExt = extension.toLowerCase()
+    const fileName = `first-impression-${Date.now()}.${safeExt}`
+    const destUri = `${recordingsDir}${fileName}`
+
+    try {
+      // Copy to durable app storage so we can retry uploads after network failures.
+      await FileSystemLegacy.copyAsync({ from: sourceUri, to: destUri })
+      return destUri
+    } catch (err) {
+      // If persistence fails, we still return null and keep original URI.
+      return null
+    }
+  }
 
   useEffect(() => {
     if (!videoObject) setView('record')
@@ -105,7 +142,7 @@ const FirstImpressionCreateScreen = () => {
     if (cameraPermission === null)
       return (
         <View>
-          <Text>hello</Text>
+          <Text></Text>
         </View>
       )
     if (cameraPermission === false) return <FirstImpressionPermissions />
@@ -130,7 +167,22 @@ const FirstImpressionCreateScreen = () => {
         
         console.log('📹 Recording with options:', recordOptions)
         const video = await cameraRef.current.recordAsync(recordOptions)
+        // Show the recorded video immediately (fast path)
         addVideoObject(video)
+
+        // Persist it in the background so upload retries won't lose the recording.
+        // (Cache URIs can be cleaned by the OS; documentDirectory is durable.)
+        const persistedUri = await persistRecordedVideoAsync(video)
+        if (persistedUri) {
+          addVideoObject({
+            ...video,
+            // Keep playback URI stable to avoid `expo-video` churn/release issues.
+            // We'll use `persistedUri` for uploading + durability.
+            uri: video?.uri,
+            persistedUri,
+            persisted: true,
+          })
+        }
       } catch (error) {
         console.error('Recording error:', error)
       }

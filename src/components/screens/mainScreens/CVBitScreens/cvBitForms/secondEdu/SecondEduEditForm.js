@@ -40,6 +40,7 @@ const SecondEduEditForm = () => {
   const [subjectsInputShow, setSubjectsInputShow] = useState(false)
   const [additionalInfoInputShow, setAdditionalInfoInputShow] = useState(false)
   const [saveButtonShow, setSaveButtonShow] = useState(false)
+  const [subjectInputFocused, setSubjectInputFocused] = useState(false)
 
   const {
     state: { yearPickerProps, yearPickerShow, startYear, endYear },
@@ -110,7 +111,12 @@ const SecondEduEditForm = () => {
     if (!datesInputShow) return null
     if (!yearPickerProps) {
       return (
-        <View style={error && error.dates ? styles.datesErrorBed : null}>
+        <View
+          style={[
+            error && error.dates ? styles.datesErrorBed : null,
+            Platform.OS === 'ios' ? styles.datesInputIos : null,
+          ]}
+        >
           <Text style={styles.inputHeader}>Dates attended</Text>
           <YearPicker bit="startYear" buttonText="start date" />
           <YearPicker bit="endYear" buttonText="end date" />
@@ -299,7 +305,13 @@ const SecondEduEditForm = () => {
   const subjectsInput = () => {
     if (!subjectsInputShow) return null
     return (
-      <View>
+      <View
+        style={[
+          Platform.OS === 'ios' && !subjectInputFocused
+            ? styles.subjectsInputIos
+            : null,
+        ]}
+      >
         {renderSubjectsArray()}
         <TextInput
           ref={inputRef}
@@ -316,12 +328,16 @@ const SecondEduEditForm = () => {
           value={subject}
           onChangeText={setSubject}
           onFocus={() => {
+            setSubjectInputFocused(true)
             // Scroll to end when input is focused
             setTimeout(() => {
               if (scrollViewRef.current) {
                 scrollViewRef.current.scrollToEnd({ animated: true })
               }
             }, 300)
+          }}
+          onBlur={() => {
+            setSubjectInputFocused(false)
           }}
           autoCorrect={true}
           autoCapitalize="words"
@@ -504,7 +520,12 @@ const SecondEduEditForm = () => {
   const renderPreview = () => {
     if (!saveButtonShow) return null
     return (
-      <View style={styles.previewBed}>
+      <View
+        style={[
+          styles.previewBed,
+          Platform.OS === 'ios' ? styles.previewBedIos : null,
+        ]}
+      >
         {!schoolName ? null : (
           <View>
             <Text style={styles.previewLabel}>School Name</Text>
@@ -728,6 +749,12 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 2,
   },
+  datesInputIos: {
+    marginTop: 120,
+  },
+  subjectsInputIos: {
+    marginTop: 120,
+  },
   error: {
     color: '#ff0033',
     alignSelf: 'center',
@@ -798,6 +825,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 10,
     marginHorizontal: 20,
+  },
+  previewBedIos: {
+    marginTop: 120,
   },
   previewLabel: {
     fontFamily: 'sourceSansProBold',

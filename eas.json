@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 5.0.0"
+    "version": ">= 5.0.0",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -23,7 +24,7 @@
       }
     },
     "closed-testing": {
-      "distribution": "internal",
+      "distribution": "store",
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease"
@@ -39,6 +40,13 @@
       },
       "ios": {
         "buildConfiguration": "Release"
+      }
+    },
+    "huawei": {
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease"
       }
     }
   },

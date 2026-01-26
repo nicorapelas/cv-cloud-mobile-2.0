@@ -78,11 +78,16 @@ class SocketService {
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('❌ Socket connection error:', error);
+      // NOTE: In React Native dev, `console.error` triggers a red screen.
+      // Connection failures are expected during poor connectivity, so keep this non-fatal.
+      console.log('⚠️ Socket connection error:', error?.message || error);
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('❌ Max reconnection attempts reached. Stopping reconnection attempts.');
+        // Avoid red screen; this is not a crash-worthy condition.
+        console.log(
+          '⚠️ Max reconnection attempts reached. Stopping reconnection attempts.'
+        );
         this.shouldReconnect = false;
         // Disable automatic reconnection
         if (this.socket) {

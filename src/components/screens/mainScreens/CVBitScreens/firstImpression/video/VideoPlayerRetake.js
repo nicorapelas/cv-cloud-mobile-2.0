@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from 'react'
+import React, { useContext, useEffect, useMemo, useState, useRef } from 'react'
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 import {
   AntDesign,
@@ -28,24 +28,37 @@ const VideoPlayerRetake = ({ firstImpression }) => {
     : firstImpression
 
   // Only create player when we have a valid videoUrl
-  const player = useVideoPlayer(
-    firstImpressionData?.videoUrl ? { uri: firstImpressionData.videoUrl } : undefined
+  const videoUri = firstImpressionData?.videoUrl || null
+  const playerSource = useMemo(
+    () => (videoUri ? { uri: videoUri } : undefined),
+    [videoUri]
   )
+  const player = useVideoPlayer(playerSource)
+
+  const isPlayerReady =
+    player &&
+    typeof player === 'object' &&
+    typeof player.play === 'function' &&
+    typeof player.pause === 'function'
 
   // Store player reference and handle updates
   useEffect(() => {
-    if (player) {
+    if (isPlayerReady) {
       playerRef.current = player
       // Set loop when player is ready
-      player.loop = true
+      try {
+        player.loop = true
+      } catch (err) {
+        // ignore
+      }
     }
     return () => {
       playerRef.current = null
     }
-  }, [player])
+  }, [isPlayerReady, player])
 
   useEffect(() => {
-    if (!player) return
+    if (!isPlayerReady) return
 
     const subscription = player.addListener('playingChange', (newIsPlaying) => {
       if (playerRef.current === player) {
@@ -56,7 +69,7 @@ const VideoPlayerRetake = ({ firstImpression }) => {
     return () => {
       subscription.remove()
     }
-  }, [player])
+  }, [isPlayerReady, player])
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -81,7 +94,7 @@ const VideoPlayerRetake = ({ firstImpression }) => {
     
     if (!firstImpressionData?.videoUrl) return null
     if (loading) return <LoaderFullScreen />
-    if (!player) return null
+    if (!isPlayerReady) return null
     
     const createdDate = firstImpressionData?.created
     
@@ -106,7 +119,7 @@ const VideoPlayerRetake = ({ firstImpression }) => {
           <TouchableOpacity
             style={styles.playButton}
             onPress={() => {
-              if (player && playerRef.current === player) {
+              if (isPlayerReady && playerRef.current === player) {
                 try {
                   isPlaying ? player.pause() : player.play()
                 } catch (error) {

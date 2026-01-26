@@ -1,6 +1,6 @@
 {
   "name": "mobile-rebuild",
-  "version": "2.0.30",
+  "version": "2.0.32",
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
@@ -17,8 +17,8 @@
     "@use-expo/font": "^2.0.0",
     "async": "^3.2.6",
     "axios": "^1.7.2",
-    "babel-preset-expo": "~54.0.9",
-    "expo": "~54.0.31",
+    "babel-preset-expo": "~54.0.10",
+    "expo": "~54.0.32",
     "expo-audio": "~1.1.1",
     "expo-build-properties": "~1.0.10",
     "expo-camera": "~17.0.10",
@@ -26,7 +26,7 @@
     "expo-constants": "~18.0.13",
     "expo-document-picker": "~14.0.8",
     "expo-file-system": "~19.0.21",
-    "expo-font": "~14.0.10",
+    "expo-font": "~14.0.11",
     "expo-image-manipulator": "~14.0.8",
     "expo-image-picker": "~17.0.10",
     "expo-linking": "~8.0.11",

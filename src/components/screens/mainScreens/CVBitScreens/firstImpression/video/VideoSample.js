@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { AntDesign, MaterialIcons } from '@expo/vector-icons'
 import { VideoView, useVideoPlayer } from 'expo-video'
@@ -15,33 +15,34 @@ const VideoSample = () => {
     fetchDemoVideoUrl,
   } = useContext(FirstImpressionContext)
 
-  const player = useVideoPlayer(
-    videoDemoUrl?.url ? { uri: videoDemoUrl.url } : undefined
+  const demoUri = videoDemoUrl?.url || null
+  const playerSource = useMemo(
+    () => (demoUri ? { uri: demoUri } : undefined),
+    [demoUri]
   )
+  const player = useVideoPlayer(playerSource)
 
   useEffect(() => {
     fetchDemoVideoUrl()
   }, [])
 
-  useEffect(() => {
-    if (videoDemoUrl?.url && player) {
-      // Check if player is still valid before using it
-      try {
-        player.replaceAsync({ uri: videoDemoUrl.url }).then(() => {
-          if (player) {
-            player.loop = true
-          }
-        }).catch((error) => {
-          console.log('Error replacing video:', error)
-        })
-      } catch (error) {
-        console.log('Error accessing player:', error)
-      }
-    }
-  }, [videoDemoUrl?.url, player])
+  const isPlayerReady =
+    player &&
+    typeof player === 'object' &&
+    typeof player.play === 'function' &&
+    typeof player.pause === 'function'
 
   useEffect(() => {
-    if (!player) return
+    if (!isPlayerReady) return
+    try {
+      player.loop = true
+    } catch (error) {
+      // ignore
+    }
+  }, [isPlayerReady, player])
+
+  useEffect(() => {
+    if (!isPlayerReady) return
 
     let subscription = null
     try {
@@ -61,11 +62,11 @@ const VideoSample = () => {
         }
       }
     }
-  }, [player])
+  }, [isPlayerReady, player])
 
   const renderContent = () => {
     if (loading) return <LoaderFullScreen />
-    if (!videoDemoUrl || !player) return null
+    if (!videoDemoUrl || !isPlayerReady) return null
     return (
       <View style={styles.videoBed}>
         <VideoView
@@ -79,7 +80,7 @@ const VideoSample = () => {
           <TouchableOpacity
             style={styles.playButton}
             onPress={() => {
-              if (!player) return
+              if (!isPlayerReady) return
               try {
                 if (isPlaying) {
                   player.pause()

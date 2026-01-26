@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -60,7 +61,12 @@ const NotificationModal = ({ visible, onClose }) => {
     >
       <SafeAreaView style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            Platform.OS === 'ios' ? styles.headerIos : null,
+          ]}
+        >
           <Text style={styles.headerTitle}>Notifications</Text>
           <View style={styles.headerActions}>
             {unreadCount > 0 && (
@@ -175,6 +181,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#f8f9fa',
+  },
+  headerIos: {
+    marginTop: 25,
   },
   headerTitle: {
     fontSize: 20,

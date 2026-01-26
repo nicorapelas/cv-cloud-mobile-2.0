@@ -99,7 +99,7 @@ const FirstImpressionCreateScreen = () => {
     if (cameraPermission === null)
       return (
         <View>
-          <Text>hello</Text>
+          <Text>.</Text>
         </View>
       )
     if (cameraPermission === false) return <FirstImpressionPermissions />

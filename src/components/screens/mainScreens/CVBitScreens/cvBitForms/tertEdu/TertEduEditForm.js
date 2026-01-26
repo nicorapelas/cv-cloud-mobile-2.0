@@ -131,7 +131,7 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
         <TextInput
           ref={inputRef}
           style={styles.input}
-          maxLength={30}
+          maxLength={45}
           textAlign="center"
           placeholder="institute name"
           value={instituteName}
@@ -151,8 +151,8 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
         />
         {!error || error === null || yearPickerShow ? (
           <Text style={styles.maxCharactersNote}>
-            max 30 characters ({!instituteName ? '0' : instituteName.length}
-            /30)
+            max 45 characters ({!instituteName ? '0' : instituteName.length}
+            /45)
           </Text>
         ) : (
           <>
@@ -199,7 +199,12 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
     if (!datesInputShow) return null
     if (!yearPickerProps) {
       return (
-        <View style={error && error.dates ? styles.datesErrorBed : null}>
+        <View
+          style={[
+            error && error.dates ? styles.datesErrorBed : null,
+            Platform.OS === 'ios' ? styles.datesInputIos : null,
+          ]}
+        >
           <Text style={styles.inputHeader}>Dates attended</Text>
           <YearPicker
             bit="startYear"
@@ -294,7 +299,11 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
   const certificateInput = () => {
     if (!certificateInputShow) return null
     return (
-      <View>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.certificateInputIos : null,
+        ]}
+      >
         <Text style={styles.inputHeader}>Certification type</Text>
         <OptionsModal
           bit="certificateType"
@@ -436,7 +445,11 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
   const additionalInfoInput = () => {
     if (!additionalInfoInputShow) return null
     return (
-      <View>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.additionalInfoInputIos : null,
+        ]}
+      >
         <Text style={styles.inputHeader}>Additional information</Text>
         <TextInput
           ref={inputRef}
@@ -511,7 +524,12 @@ const TertEduEditEditForm = ({ incomingCertificationType }) => {
   const renderPreview = () => {
     if (!saveButtonShow) return null
     return (
-      <View style={styles.previewBed}>
+      <View
+        style={[
+          styles.previewBed,
+          Platform.OS === 'ios' ? styles.previewBedIos : null,
+        ]}
+      >
         {!instituteName ? null : (
           <View>
             <Text style={styles.previewLabel}>Institute Name</Text>
@@ -748,6 +766,15 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderWidth: 2,
   },
+  datesInputIos: {
+    marginTop: 120,
+  },
+  certificateInputIos: {
+    marginTop: 120,
+  },
+  additionalInfoInputIos: {
+    marginTop: 120,
+  },
   yearPickerHeader: {
     color: '#ffff',
     alignSelf: 'center',
@@ -836,6 +863,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     marginHorizontal: 20,
+  },
+  previewBedIos: {
+    marginTop: 120,
   },
   previewLabel: {
     fontFamily: 'sourceSansProBold',

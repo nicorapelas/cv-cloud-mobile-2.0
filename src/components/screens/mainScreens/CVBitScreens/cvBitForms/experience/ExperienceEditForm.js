@@ -106,7 +106,11 @@ const ExperienceEditForm = () => {
   const titleInput = () => {
     if (!titleInputShow) return null
     return (
-      <View>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.experienceInputIos : null,
+        ]}
+      >
         <Text style={styles.inputHeader}>Job title</Text>
         <TextInput
           ref={inputRef}
@@ -170,7 +174,11 @@ const ExperienceEditForm = () => {
   const descriptionInput = () => {
     if (!descriptionInputShow) return null
     return (
-      <View>
+      <View
+        style={[
+          Platform.OS === 'ios' ? styles.experienceInputIos : null,
+        ]}
+      >
         <Text style={styles.inputHeader}>Job description</Text>
         <TextInput
           ref={inputRef}
@@ -305,7 +313,12 @@ const ExperienceEditForm = () => {
   const renderPreview = () => {
     if (!saveButtonShow) return null
     return (
-      <View style={styles.previewBed}>
+      <View
+        style={[
+          styles.previewBed,
+          Platform.OS === 'ios' ? styles.previewBedIos : null,
+        ]}
+      >
         {!title ? null : (
           <View>
             <Text style={styles.previewLabel}>Job title</Text>
@@ -515,6 +528,12 @@ const styles = StyleSheet.create({
   },
   previewText: {
     marginBottom: 5,
+  },
+  experienceInputIos: {
+    marginTop: 120,
+  },
+  previewBedIos: {
+    marginTop: 120,
   },
 })
 

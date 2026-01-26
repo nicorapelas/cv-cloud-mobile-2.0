@@ -12,9 +12,9 @@ const FirstImpressionReducer = (state, action) => {
     case 'ADD_ERROR':
       return { ...state, error: action.payload, loading: false }
     case 'ADD_UPLOAD_SIGNATURE':
-      return { ...state, uploadSignature: action.payload }
+      return { ...state, uploadSignature: action.payload, loading: false }
     case 'CLEAR_UPLOAD_SIGNATURE':
-      return { ...state, uploadSignature: action.payload }
+      return { ...state, uploadSignature: action.payload, loading: false }
     case 'FETCH_STATUS':
       return { ...state, firstImpressionStatus: action.payload, loading: false }
     case 'FETCH':
