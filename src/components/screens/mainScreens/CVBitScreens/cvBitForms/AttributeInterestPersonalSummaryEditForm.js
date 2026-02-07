@@ -53,24 +53,6 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
 
   const keyboard = useKeyboard()
 
-  // Scroll to input when keyboard appears
-  useEffect(() => {
-    if (keyboard.keyboardShown && scrollViewRef.current) {
-      const shouldScroll = 
-        (incomingBit === 'personalSummary' && personalSummary) ||
-        (incomingBit === 'attribute' && attribute) ||
-        (incomingBit === 'interest' && interest)
-      
-      if (shouldScroll) {
-        setTimeout(() => {
-          if (scrollViewRef.current) {
-            scrollViewRef.current.scrollToEnd({ animated: true })
-          }
-        }, 300)
-      }
-    }
-  }, [keyboard.keyboardShown, incomingBit, personalSummary, attribute, interest])
-
   // Flash scroll indicators on iOS when form loads
   useEffect(() => {
     if (incomingBit && Platform.OS === 'ios' && scrollViewRef.current) {
@@ -162,12 +144,6 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setAttribute}
               onFocus={() => {
                 tipSelectReset()
-                // Scroll to end when input is focused
-                setTimeout(() => {
-                  if (scrollViewRef.current) {
-                    scrollViewRef.current.scrollToEnd({ animated: true })
-                  }
-                }, 300)
               }}
               autoFocus={true}
               autoCorrect={true}
@@ -211,12 +187,6 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setInterest}
               onFocus={() => {
                 tipSelectReset()
-                // Scroll to end when input is focused
-                setTimeout(() => {
-                  if (scrollViewRef.current) {
-                    scrollViewRef.current.scrollToEnd({ animated: true })
-                  }
-                }, 300)
               }}
               autoFocus={true}
               autoCorrect={true}
@@ -261,14 +231,7 @@ const AttributeInterestPersonalSummaryEditForm = ({ bit }) => {
               onChangeText={setPersonalSummary}
               autoCorrect={true}
               autoFocus={true}
-              onFocus={() => {
-                // Scroll to end when input is focused
-                setTimeout(() => {
-                  if (scrollViewRef.current) {
-                    scrollViewRef.current.scrollToEnd({ animated: true })
-                  }
-                }, 300)
-              }}
+              onFocus={() => {}}
               editable={true}
             />
             <Text style={styles.maxCharactersNote}>

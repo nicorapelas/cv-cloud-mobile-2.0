@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState } from 'react'
 import {
   View,
   ScrollView,
@@ -34,17 +34,6 @@ const PersonalSummaryCreateForm = ({ bit }) => {
 
   const keyboard = useKeyboard()
 
-  // Scroll to input when keyboard appears
-  useEffect(() => {
-    if (keyboard.keyboardShown && personalSummaryNew !== null && scrollViewRef.current) {
-      setTimeout(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollToEnd({ animated: true })
-        }
-      }, 300)
-    }
-  }, [keyboard.keyboardShown, personalSummaryNew])
-
   const errorHeading = () => {
     if (!error) return null
     return (
@@ -75,12 +64,6 @@ const PersonalSummaryCreateForm = ({ bit }) => {
           onChangeText={setPersonalSummaryNew}
           onFocus={() => {
             clearPersonalSummaryErrors()
-            // Scroll to end when input is focused
-            setTimeout(() => {
-              if (scrollViewRef.current) {
-                scrollViewRef.current.scrollToEnd({ animated: true })
-              }
-            }, 300)
           }}
           autoCorrect={true}
           autoCapitalize="sentences"

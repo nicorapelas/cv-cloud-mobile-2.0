@@ -73,17 +73,6 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
 
   const keyboard = useKeyboard()
 
-  // Scroll to input when keyboard appears
-  useEffect(() => {
-    if (keyboard.keyboardShown && (instituteName !== null || description !== null || additionalInfo !== null) && scrollViewRef.current) {
-      setTimeout(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollToEnd({ animated: true })
-        }
-      }, 300)
-    }
-  }, [keyboard.keyboardShown, instituteName, description, additionalInfo])
-
   const errorHeading = () => {
     if (error === null) return null
     return (
@@ -117,12 +106,6 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
           value={instituteName}
           onFocus={() => {
             clearTertEduErrors()
-            // Scroll to end when input is focused
-            setTimeout(() => {
-              if (scrollViewRef.current) {
-                scrollViewRef.current.scrollToEnd({ animated: true })
-              }
-            }, 300)
           }}
           onChangeText={setSchoolName}
           autoCorrect={false}
@@ -347,14 +330,6 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
           numberOfLines={30}
           value={description}
           onChangeText={setDescription}
-          onFocus={() => {
-            // Scroll to end when input is focused
-            setTimeout(() => {
-              if (scrollViewRef.current) {
-                scrollViewRef.current.scrollToEnd({ animated: true })
-              }
-            }, 300)
-          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           multiline={true}
@@ -440,14 +415,6 @@ const TertEduCreateEditForm = ({ incomingCertificationType }) => {
           placeholder="additional information"
           value={additionalInfo}
           onChangeText={setAdditionalInfo}
-          onFocus={() => {
-            // Scroll to end when input is focused
-            setTimeout(() => {
-              if (scrollViewRef.current) {
-                scrollViewRef.current.scrollToEnd({ animated: true })
-              }
-            }, 300)
-          }}
           autoCorrect={true}
           autoCapitalize="sentences"
           autoFocus={!error ? true : false}
