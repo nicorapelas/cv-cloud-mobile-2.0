@@ -124,6 +124,12 @@ class SocketService {
       this.notifyListeners('notification', data);
     });
 
+    // CV access request (HR requested to view full CV)
+    this.socket.on('cv-access-request', (data) => {
+      console.log('📋 CV access request received:', data);
+      this.notifyListeners('cv-access-request', data);
+    });
+
     // System settings updates (broadcast to all users)
     this.socket.on('system-settings-updated', (data) => {
       console.log('⚙️ System settings updated:', data);

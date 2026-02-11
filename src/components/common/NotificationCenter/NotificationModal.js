@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
@@ -7,10 +7,13 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotifications } from '../../../context/NotificationContext';
+import ngrokApi from '../../../api/ngrok';
 
 const NotificationModal = ({ visible, onClose }) => {
   const {
@@ -20,7 +23,10 @@ const NotificationModal = ({ visible, onClose }) => {
     markAllAsRead,
     removeNotification,
     clearAllNotifications,
+    fetchNotifications,
   } = useNotifications();
+
+  const [grantingRequestId, setGrantingRequestId] = useState(null);
 
   const handleMarkAsRead = async notificationId => {
     await markAsRead(notificationId);
@@ -47,8 +53,40 @@ const NotificationModal = ({ visible, onClose }) => {
         return { name: 'eye-outline', color: '#28a745' };
       case 'cv_saved':
         return { name: 'save-outline', color: '#007bff' };
+      case 'cv_access_request':
+        return { name: 'person-add-outline', color: '#007bff' };
       default:
         return { name: 'notifications-outline', color: '#666' };
+    }
+  };
+
+  const getCvAccessRequestId = notification => {
+    const raw = notification.data?.cvAccessRequestId;
+    if (!raw) return null;
+    return typeof raw === 'string' ? raw : raw._id ?? raw;
+  };
+
+  const handleGrantAccess = async notification => {
+    const requestId = getCvAccessRequestId(notification);
+    if (!requestId) return;
+    setGrantingRequestId(requestId);
+    try {
+      await ngrokApi.patch(
+        `/api/cv-access-requests/${requestId}/respond`,
+        { action: 'approve' }
+      );
+      await fetchNotifications();
+      await markAsRead(notification.id);
+      Alert.alert('Done', 'Access granted. HR can now view your full CV.');
+    } catch (err) {
+      const message =
+        err.response?.status === 400
+          ? 'This request was already responded to.'
+          : err.response?.data?.error || 'Something went wrong.';
+      await fetchNotifications();
+      Alert.alert('Unable to grant access', message);
+    } finally {
+      setGrantingRequestId(null);
     }
   };
 
@@ -135,6 +173,30 @@ const NotificationModal = ({ visible, onClose }) => {
                       <Text style={styles.notificationTime}>
                         {formatTimestamp(notification.timestamp)}
                       </Text>
+                      {notification.type === 'cv_access_request' &&
+                        getCvAccessRequestId(notification) && (
+                          <TouchableOpacity
+                            style={styles.grantButton}
+                            onPress={() => handleGrantAccess(notification)}
+                            disabled={grantingRequestId === getCvAccessRequestId(notification)}
+                          >
+                            {grantingRequestId === getCvAccessRequestId(notification) ? (
+                              <ActivityIndicator size="small" color="#fff" />
+                            ) : (
+                              <>
+                                <Ionicons
+                                  name="checkmark-circle-outline"
+                                  size={18}
+                                  color="#fff"
+                                  style={styles.grantButtonIcon}
+                                />
+                                <Text style={styles.grantButtonText}>
+                                  Grant access to CV
+                                </Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        )}
                     </View>
                   </View>
                   <View style={styles.actionButtons}>
@@ -263,6 +325,26 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 6,
+  },
+  grantButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#007bff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    minWidth: 120,
+    justifyContent: 'center',
+  },
+  grantButtonIcon: {
+    marginRight: 6,
+  },
+  grantButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
