@@ -26,6 +26,7 @@ const Main = () => {
   const {
     state: { user },
     signout,
+    applyToIntro,
   } = useContext(AuthContext)
 
   const {
@@ -76,6 +77,11 @@ const Main = () => {
       fetchNotifications()
     }
   }, [user])
+
+  // Apply to intro (credit affiliate when threshold met) – runs when main screen is shown or user navigates
+  useEffect(() => {
+    if (user) applyToIntro()
+  }, [user, navTabSelected, CVBitScreenSelected])
 
   // Show full ad popup ONCE when settings load and it's enabled
   useEffect(() => {

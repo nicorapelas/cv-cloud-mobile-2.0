@@ -89,7 +89,7 @@ const register =
         email,
         password,
         password2,
-        affiliatceIntroCode: introAffiliateCode,
+        introAffiliateCode: introAffiliateCode || undefined,
         termsAccepted,
       })
       if (response.data.error)

@@ -1,6 +1,6 @@
 {
   "name": "mobile-rebuild",
-  "version": "2.0.39",
+  "version": "2.0.43",
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",

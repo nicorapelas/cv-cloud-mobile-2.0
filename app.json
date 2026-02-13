@@ -2,7 +2,7 @@
   "expo": {
     "name": "CV Cloud",
     "slug": "cv-cloud-mobile-rebuild",
-    "version": "2.0.39",
+    "version": "2.0.43",
     "orientation": "portrait",
     "icon": "./assets/appIcon-1024.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     },
     "ios": {
       "bundleIdentifier": "app.cvcloud.www",
-      "buildNumber": "17",
+      "buildNumber": "21",
       "supportsTablet": false,
       "infoPlist": {
         "NSCameraUsageDescription": "CV Cloud needs camera access to record video introductions and capture profile photos for your CV.",
@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "com.cvcloud.app",
-      "versionCode": 47,
+      "versionCode": 51,
       "adaptiveIcon": {
         "foregroundImage": "./assets/appIcon-adaptive-padded.png",
         "backgroundColor": "#232936"

@@ -1,5 +1,14 @@
 import React, { useState, useContext, useEffect } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View, Modal } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Modal,
+  ScrollView,
+  Dimensions,
+  Keyboard,
+} from 'react-native'
 import {
   MaterialCommunityIcons,
   Octicons,
@@ -349,6 +358,9 @@ const FormHintModal = ({ bit }) => {
     )
   }
 
+  const { height: screenHeight } = Dimensions.get('screen')
+  const maxModalHeight = screenHeight * 0.8
+
   const renderModal = () => {
     return (
       <Modal
@@ -358,7 +370,7 @@ const FormHintModal = ({ bit }) => {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalBackground}>
-          <View style={styles.messageBed}>
+          <View style={[styles.messageBed, { height: maxModalHeight }]}>
             <View style={styles.headingBed}>
               {showPhotoSample ? null : (
                 <MaterialCommunityIcons
@@ -367,7 +379,14 @@ const FormHintModal = ({ bit }) => {
                 />
               )}
             </View>
-            {renderHint()}
+            <ScrollView
+              style={styles.hintScrollView}
+              contentContainerStyle={styles.hintScrollContent}
+              showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+            >
+              {renderHint()}
+            </ScrollView>
             {showPhotoSample ? null : (
               <TouchableOpacity
                 style={styles.backButton}
@@ -387,7 +406,12 @@ const FormHintModal = ({ bit }) => {
     return (
       <TouchableOpacity
         style={styles.hintButtonContainer}
-        onPress={() => setModalVisible(true)}
+        onPress={() => {
+          Keyboard.dismiss()
+          requestAnimationFrame(() => {
+            setTimeout(() => setModalVisible(true), 100)
+          })
+        }}
       >
         <MaterialCommunityIcons
           style={styles.hintButtonIcon}
@@ -487,7 +511,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 7,
     borderColor: '#7ac6fa',
-    margin: -30,
+    flexDirection: 'column',
+  },
+  hintScrollView: {
+    flex: 1,
+    minHeight: 0,
+  },
+  hintScrollContent: {
+    paddingBottom: 12,
   },
   headingBed: {
     flexDirection: 'row',

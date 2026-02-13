@@ -109,7 +109,7 @@ const RegisterEmailScreen = () => {
     }
 
     // Handle object with error fields
-    const { email, password, password2, terms, fullName } = errorMessage
+    const { email, password, password2, terms, fullName, introAffiliateCode: introCodeError } = errorMessage
     return (
       <View style={styles.errorMessageBed}>
         {!fullName ? null : <Text style={styles.errorText}>{fullName}</Text>}
@@ -117,6 +117,7 @@ const RegisterEmailScreen = () => {
         {!password ? null : <Text style={styles.errorText}>{password}</Text>}
         {!password2 ? null : <Text style={styles.errorText}>{password2}</Text>}
         {!terms ? null : <Text style={styles.errorText}>{terms}</Text>}
+        {!introCodeError ? null : <Text style={styles.errorText}>{introCodeError}</Text>}
       </View>
     )
   }
