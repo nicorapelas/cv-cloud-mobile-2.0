@@ -5,6 +5,7 @@ import { Context as NavContext } from './src/context/NavContext'
 import { Context as AuthContext } from './src/context/AuthContext'
 import { Context as UniversalContext } from './src/context/UniversalContext'
 import { Context as AdvertisementContext } from './src/context/AdvertisementContext'
+import { Context as ClassifiedAdsContext } from './src/context/ClassifiedAdsContext'
 
 import RegisterOrLoginScreen from './src/components/screens/authScreens/RegisterOrLoginScreen'
 import RegisterEmailScreen from './src/components/screens/authScreens/RegisterEmailScreen'
@@ -30,6 +31,7 @@ const AppScreens = () => {
   const { setUserPlatformOS } = useContext(UniversalContext)
 
   const { fetchSystemSettings } = useContext(AdvertisementContext)
+  const { fetchClassifiedAdsSettings } = useContext(ClassifiedAdsContext)
 
   // Update check state
   const [showUpdateModal, setShowUpdateModal] = useState(false)
@@ -72,6 +74,7 @@ const AppScreens = () => {
   useEffect(() => {
     if (user) {
       fetchSystemSettings()
+      fetchClassifiedAdsSettings()
     }
   }, [user])
 

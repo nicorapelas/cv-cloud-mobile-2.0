@@ -1,13 +1,15 @@
 import React, { useContext, useEffect } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 
 import DashboardScreen from './dashboard/DashboardScreen'
 import ViewCVScreen from './viewCV/ViewCVScreen'
 import ShareCVScreen from './shareCVScreen/ShareCVScreen'
+import ClassifiedAdsScreen from './classifiedAds/ClassifiedAdsScreen'
 import InitDataFetch from '../../common/InitDataFetch'
 import BannerAdRender from '../../../advertisements/bannerAdsStrip/BannerAdStripRender'
 import { Context as NavContext } from '../../../context/NavContext'
 import { Context as BurgerMenuContext } from '../../../context/BurgerMenuContext'
+import { Context as ClassifiedAdsContext } from '../../../context/ClassifiedAdsContext'
 
 const MainViewRender = () => {
   const {
@@ -15,6 +17,7 @@ const MainViewRender = () => {
   } = useContext(NavContext)
 
   const { setBurgerMenuVisible } = useContext(BurgerMenuContext)
+  const { state: { classifiedAdsActive } } = useContext(ClassifiedAdsContext)
 
   useEffect(() => {
     if (CVBitScreenSelected !== '') {
@@ -30,6 +33,15 @@ const MainViewRender = () => {
         return <ViewCVScreen />
       case 'shareCV':
         return <ShareCVScreen />
+      case 'classifiedAds':
+        if (!classifiedAdsActive) {
+          return (
+            <View style={styles.unavailableContainer}>
+              <Text style={styles.unavailableText}>Job listings are currently unavailable.</Text>
+            </View>
+          )
+        }
+        return <ClassifiedAdsScreen />
       default:
         break
     }
@@ -55,6 +67,17 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  unavailableContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  unavailableText: {
+    color: '#9ca3af',
+    fontSize: 16,
+    textAlign: 'center',
   },
 })
 

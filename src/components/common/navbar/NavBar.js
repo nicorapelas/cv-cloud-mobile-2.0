@@ -5,9 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Context as UniversalContext } from '../../../context/UniversalContext'
 import { Context as NavContext } from '../../../context/NavContext'
+import { Context as ClassifiedAdsContext } from '../../../context/ClassifiedAdsContext'
 import DashboardNav from './DashboardNav'
 import ViewCV from './ViewCV'
 import ShareCV from './ShareCV'
+import JobsNav from './JobsNav'
 
 const NavBar = ({ videoUploading = false, isRecording = false }) => {
   const {
@@ -15,8 +17,10 @@ const NavBar = ({ videoUploading = false, isRecording = false }) => {
   } = useContext(UniversalContext)
 
   const {
-    state: { CVBitScreenSelected },
+    state: { CVBitScreenSelected, navTabSelected, classifiedAdDetailId },
   } = useContext(NavContext)
+
+  const { state: { classifiedAdsActive } } = useContext(ClassifiedAdsContext)
 
   const keyboard = useKeyboard()
   const insets = useSafeAreaInsets()
@@ -28,7 +32,8 @@ const NavBar = ({ videoUploading = false, isRecording = false }) => {
       imageToViewUrl ||
       videoUploading ||
       isRecording ||
-      CVBitScreenSelected !== ''
+      CVBitScreenSelected !== '' ||
+      (navTabSelected === 'classifiedAds' && classifiedAdDetailId)
     )
       return null
     return (
@@ -36,6 +41,7 @@ const NavBar = ({ videoUploading = false, isRecording = false }) => {
         <DashboardNav />
         <ViewCV />
         <ShareCV />
+        {classifiedAdsActive && <JobsNav />}
       </View>
     )
   }

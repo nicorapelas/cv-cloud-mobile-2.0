@@ -39,6 +39,7 @@ import { Provider as BurgerMenuProvider } from './src/context/BurgerMenuContext'
 import { Provider as AffiliateProvider } from './src/context/AffiliateContext'
 import { Provider as ConfigProvider } from './src/context/ConfigContext'
 import { Provider as AdvertisementReducer } from './src/context/AdvertisementContext'
+import { Provider as ClassifiedAdsProvider } from './src/context/ClassifiedAdsContext'
 import AppScreens from './AppScreens'
 
 const customFonts = {
@@ -87,8 +88,10 @@ export default function App() {
                                               <PhotoProvider>
                                                 <CertificateProvider>
                                                   <AdvertisementReducer>
+                                                  <ClassifiedAdsProvider>
                                                     <AppScreens />
-                                                  </AdvertisementReducer>
+                                                  </ClassifiedAdsProvider>
+                                                </AdvertisementReducer>
                                                 </CertificateProvider>
                                               </PhotoProvider>
                                             </TertEduProvider>

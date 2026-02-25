@@ -39,7 +39,7 @@ const Main = () => {
   } = useContext(AdvertisementContext)
 
   const {
-    state: { navTabSelected, CVBitScreenSelected },
+    state: { navTabSelected, CVBitScreenSelected, classifiedAdDetailId },
   } = useContext(NavContext)
 
   const {
@@ -143,6 +143,7 @@ const Main = () => {
       CVBitScreenSelected === 'firstImpressionCreate' ||
       CVBitScreenSelected === 'firstImpressionEdit' ||
       navTabSelected === 'viewCV' ||
+      (navTabSelected === 'classifiedAds' && classifiedAdDetailId) ||
       imageToViewUrl ||
       videoUploading
     ) {
@@ -153,6 +154,7 @@ const Main = () => {
   }, [
     CVBitScreenSelected,
     navTabSelected,
+    classifiedAdDetailId,
     imageToViewUrl,
     videoUploading,
     firstImpression,
