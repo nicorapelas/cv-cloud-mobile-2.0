@@ -79,13 +79,14 @@ const ManageAffiliate = ({ affiliateFormType }) => {
 
   const renderAffiliateInfo = () => {
     if (!affiliateInfo) return null
-    const { name, phone, email, introductions, code, _id } = affiliateInfo
+    const { name, phone, email, introductions, firstImpressions, code, _id } = affiliateInfo
     return (
       <>
         <Text style={styles.infoText}>{name}</Text>
         <Text style={styles.infoText}>{phone}</Text>
         <Text style={styles.infoText}>{email}</Text>
         <Text style={styles.infoText}>Introductions: {introductions}</Text>
+        <Text style={styles.infoText}>First Impressions: {firstImpressions ?? 0}</Text>
         <Text style={styles.infoText}>Code: {code}</Text>
         <Text style={styles.infoText}>id: {_id}</Text>
       </>
@@ -106,6 +107,9 @@ const ManageAffiliate = ({ affiliateFormType }) => {
               <Text style={styles.listItemText}>{item.email}</Text>
               <Text style={styles.listItemText}>
                 Introductions: {item.introductions}
+              </Text>
+              <Text style={styles.listItemText}>
+                First Impressions: {item.firstImpressions ?? 0}
               </Text>
               <Text style={styles.listItemText}>Code: {item.code}</Text>
               <Text style={styles.listItemText}>id: {item._id}</Text>
