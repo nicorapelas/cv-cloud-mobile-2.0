@@ -39,6 +39,7 @@ const RegisterEmailScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
+  const [affiliateCode, setAffiliateCode] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showSubmitButton, setShowSubmitButton] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -59,10 +60,13 @@ const RegisterEmailScreen = () => {
 
   const keyboard = useKeyboard()
 
-  // Clear messages when component mounts
+  // Clear messages when component mounts; pre-fill referral code if set on previous screen
   useEffect(() => {
     clearApiMessage()
     clearErrorMessage()
+    if (introAffiliateCode && introAffiliateCode.trim()) {
+      setAffiliateCode(introAffiliateCode.trim())
+    }
   }, [])
 
   const validateEmail = () => {
@@ -267,6 +271,25 @@ const RegisterEmailScreen = () => {
         </View>
         <View style={styles.validateContainer}>{validatePassword()}</View>
 
+        <View style={styles.affiliateSection}>
+          <Text style={styles.affiliateLabel}>Referral code (optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter code if you have one"
+            value={affiliateCode}
+            onChangeText={setAffiliateCode}
+            autoCapitalize="none"
+            autoCorrect={false}
+            onFocus={() => {
+              setIsInputFocused(true)
+              clearErrorMessage()
+            }}
+            onBlur={() => {
+              if (!keyboard.keyboardShown) setIsInputFocused(false)
+            }}
+          />
+        </View>
+
         {/* Terms and Conditions Checkbox */}
         <CheckBox
           title={
@@ -293,7 +316,7 @@ const RegisterEmailScreen = () => {
                 email,
                 password,
                 password2,
-                introAffiliateCode,
+                introAffiliateCode: (affiliateCode && affiliateCode.trim()) ? affiliateCode.trim() : undefined,
                 termsAccepted,
               })
             }
@@ -1000,6 +1023,17 @@ const styles = StyleSheet.create({
   },
   validateContainer: {
     marginBottom: 10,
+  },
+  affiliateSection: {
+    marginTop: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  affiliateLabel: {
+    color: '#F9B321',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   validateText: {
     color: '#F9B321',

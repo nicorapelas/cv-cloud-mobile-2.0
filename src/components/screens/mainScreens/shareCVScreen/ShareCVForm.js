@@ -25,6 +25,7 @@ import FormHintModal from '../../../common/modals/FormHintModal'
 import validateEmailInput from '../../../../validation/email'
 import FormCancelButton from '../../../common/FormCancelButton'
 import LoaderFullScreen from '../../../common/LoaderFullScreen'
+import { Context as AuthContext } from '../../../../context/AuthContext'
 import { Context as ShareCVContext } from '../../../../context/ShareCVContext'
 import { Context as PhotoContext } from '../../../../context/PhotoContext'
 import { Context as PersonalInfoContext } from '../../../../context/PersonalInfoContext'
@@ -72,6 +73,7 @@ const ShareCVForm = () => {
   } = useContext(ShareCVContext)
 
   const { setNavTabSelected, setCVBitScreenSelected } = useContext(NavContext)
+  const { applyToIntro } = useContext(AuthContext)
 
   useEffect(() => {
     // Always fetch fresh data when form opens to ensure we have the latest assigned photo
@@ -727,6 +729,7 @@ ${fullName}`
             }
             createShareCV(formValues, () => {
               setSentMessage(true)
+              applyToIntro()
               // Reset to default values
               const fullName = personalInfo && personalInfo.length > 0 ? personalInfo[0]?.fullName || '' : ''
               setSubject(

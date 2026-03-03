@@ -1,17 +1,15 @@
-import React, { useContext, useState, useEffect, useRef } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
   View,
   ScrollView,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   Image,
   Platform,
   KeyboardAvoidingView,
-  Keyboard,
 } from 'react-native'
-import { AntDesign, Ionicons } from '@expo/vector-icons'
+import { AntDesign } from '@expo/vector-icons'
 
 import { Context as AuthContext } from '../../../context/AuthContext'
 import { Context as NavContext } from '../../../context/NavContext'
@@ -21,12 +19,8 @@ import LoaderFullScreen from '../../common/LoaderFullScreen'
 import ModalLink from '../../links/ModalLink'
 
 const RegisterOrLoginScreen = ({ navigation }) => {
-  const [code, setCode] = useState(null)
-  const scrollViewRef = useRef(null)
-
   const {
-    state: { loading, apiMessage, introAffiliateCode },
-    setIntroAffiliateCode,
+    state: { loading, apiMessage },
     clearApiMessage,
     clearErrorMessage,
   } = useContext(AuthContext)
@@ -43,19 +37,6 @@ const RegisterOrLoginScreen = ({ navigation }) => {
     clearErrorMessage()
   }, [])
 
-  // On Android, scroll affiliate input into view when keyboard opens
-  useEffect(() => {
-    if (Platform.OS !== 'android') return
-    const sub = Keyboard.addListener('keyboardDidShow', () => {
-      setTimeout(() => {
-        if (scrollViewRef.current) {
-          scrollViewRef.current.scrollToEnd({ animated: true })
-        }
-      }, 100)
-    })
-    return () => sub.remove()
-  }, [])
-
   const renderApiMessage = () => {
     if (!apiMessage) return null
     const { error } = apiMessage
@@ -65,63 +46,6 @@ const RegisterOrLoginScreen = ({ navigation }) => {
           <ModalLink buttonText="OK" message={error} routeName="LoginEmail" />
         )}
       </>
-    )
-  }
-
-  const scrollToAffiliateSection = () => {
-    const delay = Platform.OS === 'android' ? 400 : 300
-    setTimeout(() => {
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollToEnd({ animated: true })
-      }
-    }, delay)
-  }
-
-  const handleRemoveCode = () => {
-    setIntroAffiliateCode(null)
-  }
-
-  const affiliateInput = () => {
-    const attached = introAffiliateCode && introAffiliateCode.length > 0
-    if (attached) {
-      return (
-        <View style={styles.affiliateSection}>
-          <Text style={styles.affiliateLabel}>Referral code (optional)</Text>
-          <View style={styles.attachedBlock}>
-            <Ionicons name="checkmark-circle" size={28} color="#2ecc71" style={styles.attachedIcon} />
-            <Text style={styles.attachedTitle}>Referral code attached</Text>
-            <Text style={styles.attachedCode}>{introAffiliateCode}</Text>
-            <Text style={styles.attachedHint}>Will be applied when you sign up.</Text>
-            <TouchableOpacity style={styles.removeButton} onPress={handleRemoveCode}>
-              <Text style={styles.removeButtonText}>Remove code</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )
-    }
-    return (
-      <View style={styles.affiliateSection}>
-        <Text style={styles.affiliateLabel}>Referral code (optional)</Text>
-        <TextInput
-          style={styles.input}
-          autoCapitalize="none"
-          textAlign="center"
-          placeholder="Enter code if you have one"
-          value={code || ''}
-          onChangeText={setCode}
-          onFocus={scrollToAffiliateSection}
-          autoCorrect={false}
-        />
-        <TouchableOpacity
-          style={styles.attachButton}
-          onPress={() => {
-            Keyboard.dismiss()
-            setIntroAffiliateCode(code && code.trim() ? code.trim() : null)
-          }}
-        >
-          <Text style={styles.attachButtonText}>Attach code</Text>
-        </TouchableOpacity>
-      </View>
     )
   }
 
@@ -149,7 +73,6 @@ const RegisterOrLoginScreen = ({ navigation }) => {
           style={userPlanformOS === 'ios' ? styles.bedIos : styles.bedAndroid}
         >
           <ScrollView
-            ref={scrollViewRef}
             contentContainerStyle={styles.scrollContent}
             style={styles.container}
             keyboardShouldPersistTaps="handled"
@@ -192,7 +115,6 @@ const RegisterOrLoginScreen = ({ navigation }) => {
                 <Text style={styles.buttonText}>Login here</Text>
               </TouchableOpacity>
             </View>
-            {affiliateInput()}
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
@@ -262,85 +184,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 6,
   },
-  affiliateSection: {
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  affiliateLabel: {
-    color: '#F9B321',
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
   logo: {
     width: 200,
     alignSelf: 'center',
     marginTop: '20%',
-  },
-  input: {
-    backgroundColor: '#ffff',
-    width: '50%',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    alignSelf: 'center',
-    marginBottom: 5,
-  },
-  attachButton: {
-    backgroundColor: '#278acd',
-    borderRadius: 25,
-    alignSelf: 'center',
-    marginBottom: -30,
-  },
-  attachButtonText: {
-    color: '#ffff',
-    fontSize: 12,
-    textAlign: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-  },
-  attachedBlock: {
-    backgroundColor: 'rgba(46, 204, 113, 0.15)',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignSelf: 'center',
-    width: '85%',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 204, 113, 0.4)',
-  },
-  attachedIcon: {
-    marginBottom: 8,
-  },
-  attachedTitle: {
-    color: '#2ecc71',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  attachedCode: {
-    color: '#F9B321',
-    fontSize: 16,
-    fontFamily: Platform.OS === 'android' ? 'sourceSansProLight' : undefined,
-    marginBottom: 6,
-  },
-  attachedHint: {
-    color: '#bdc3c7',
-    fontSize: 11,
-    marginBottom: 12,
-  },
-  removeButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#e74c3c',
-    borderRadius: 20,
-  },
-  removeButtonText: {
-    color: '#e74c3c',
-    fontSize: 12,
   },
   button: {
     backgroundColor: '#278acd',
