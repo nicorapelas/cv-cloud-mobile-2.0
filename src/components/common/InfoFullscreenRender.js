@@ -5,6 +5,7 @@ import TermsAndConditions from './termsAndConditions/TermsAndConditions'
 import TermsAndConditionsText from './burgerMenu/TermsAndConditionsText'
 import SignOutConfirm from './burgerMenu/SignOutConfirm'
 import DeleteAccountConfirm from './burgerMenu/DeleteAcountConfirm'
+import ReferralsPerformanceView from './burgerMenu/ReferralsPerformanceView'
 import ManagmentMenu from './burgerMenu/managment/ManagmentMenu'
 import AdminPanelScreen from '../screens/admin/AdminPanelScreen'
 import { Context as BurgerMenuContext } from '../../context/BurgerMenuContext'
@@ -31,6 +32,12 @@ const InfoFullscreenRender = () => {
         return <SignOutConfirm />
       case 'deleteAccount':
         return <DeleteAccountConfirm />
+      case 'referrals':
+        return (
+          <View style={styles.referralsWrapper}>
+            <ReferralsPerformanceView />
+          </View>
+        )
       case 'managment':
         return <ManagmentMenu />
       case 'adminPanel':
@@ -50,6 +57,11 @@ const InfoFullscreenRender = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  referralsWrapper: {
+    flex: 1,
+    paddingTop: 60,
+    paddingBottom: 80,
   },
 })
 

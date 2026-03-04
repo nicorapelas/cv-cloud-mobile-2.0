@@ -3,6 +3,7 @@ import { View, Animated, StyleSheet, Dimensions, Platform } from 'react-native'
 
 import MainViewRender from '../../screens/mainScreens/MainViewRender'
 import TermsAndConditionsBurgerButton from '../burgerMenu/TermsAndConditionsBurgerButton'
+import ReferralsButton from '../burgerMenu/ReferralsButton'
 import SignOut from '../burgerMenu/SignOut'
 import DeleteAccount from '../burgerMenu/DeleteAccount'
 import AppVersion from '../burgerMenu/AppVersion'
@@ -40,6 +41,7 @@ const Menu = () => {
           style={[styles.menu, { transform: [{ translateX: slideAnim }] }]}
         >
           <TermsAndConditionsBurgerButton />
+          <ReferralsButton />
           <SignOut />
           <DeleteAccount />
           <Managment />

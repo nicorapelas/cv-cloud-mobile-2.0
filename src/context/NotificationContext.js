@@ -131,13 +131,13 @@ export const NotificationProvider = ({ children }) => {
   // Clear all notifications
   const clearAllNotifications = async () => {
     try {
-      // Delete all from server
       await ngrokApi.delete('/api/notifications');
-      // Clear local state
       dispatch({ type: 'CLEAR_ALL_NOTIFICATIONS' });
     } catch (error) {
-      console.error('Error clearing all notifications:', error);
-      // Still clear local state even if server call fails
+      // Server may be unavailable (503) or network issue – still clear locally
+      if (__DEV__) {
+        console.warn('Clear-all request failed, cleared locally:', error?.response?.status || error?.message);
+      }
       dispatch({ type: 'CLEAR_ALL_NOTIFICATIONS' });
     }
   };
