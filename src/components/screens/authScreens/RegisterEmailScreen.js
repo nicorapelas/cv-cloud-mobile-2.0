@@ -13,6 +13,7 @@ import {
 import { CheckBox } from 'react-native-elements'
 import { Ionicons, AntDesign, MaterialIcons } from '@expo/vector-icons'
 import { useKeyboard } from '@react-native-community/hooks'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import AuthScreensBackArrowLink from '../../links/AuthScreensBackArrowLink'
 import NavLink from '../../links/NavLink'
@@ -44,7 +45,25 @@ const RegisterEmailScreen = () => {
   const [showSubmitButton, setShowSubmitButton] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
+  const [showReferralModal, setShowReferralModal] = useState(false)
+  const [referralModalValue, setReferralModalValue] = useState('')
   const [isInputFocused, setIsInputFocused] = useState(false)
+
+  const insets = useSafeAreaInsets()
+
+  const openReferralModal = () => {
+    setReferralModalValue(affiliateCode)
+    setShowReferralModal(true)
+  }
+
+  const closeReferralModal = () => {
+    setShowReferralModal(false)
+  }
+
+  const confirmReferralCode = () => {
+    setAffiliateCode(referralModalValue.trim())
+    setShowReferralModal(false)
+  }
 
   useEffect(() => {
     const { isValid } = validateEmailInput(email)
@@ -272,22 +291,24 @@ const RegisterEmailScreen = () => {
         <View style={styles.validateContainer}>{validatePassword()}</View>
 
         <View style={styles.affiliateSection}>
-          <Text style={styles.affiliateLabel}>Referral code (optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter code if you have one"
-            value={affiliateCode}
-            onChangeText={setAffiliateCode}
-            autoCapitalize="none"
-            autoCorrect={false}
-            onFocus={() => {
-              setIsInputFocused(true)
-              clearErrorMessage()
-            }}
-            onBlur={() => {
-              if (!keyboard.keyboardShown) setIsInputFocused(false)
-            }}
-          />
+          {affiliateCode.trim() ? (
+            <View style={styles.affiliateCodeRow}>
+              <Text style={styles.affiliateLabel}>Referral code: {affiliateCode.trim()}</Text>
+              <TouchableOpacity
+                style={styles.affiliateLinkButton}
+                onPress={openReferralModal}
+              >
+                <Text style={styles.affiliateLinkText}>Change</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.affiliateAddButton}
+              onPress={openReferralModal}
+            >
+              <Text style={styles.affiliateAddButtonText}>Add referral code</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Terms and Conditions Checkbox */}
@@ -338,6 +359,48 @@ const RegisterEmailScreen = () => {
       </View>
     )
   }
+
+  const renderReferralModal = () => (
+    <Modal
+      visible={showReferralModal}
+      animationType="slide"
+      transparent
+      onRequestClose={closeReferralModal}
+    >
+      <View style={styles.referralModalOverlay}>
+        <View style={styles.referralModalContent}>
+          <View style={styles.referralModalHeader}>
+            <Text style={styles.referralModalTitle}>Referral code (optional)</Text>
+            <TouchableOpacity onPress={closeReferralModal}>
+              <MaterialIcons name="close" size={28} color="#F9B321" />
+            </TouchableOpacity>
+          </View>
+          <TextInput
+            style={styles.referralModalInput}
+            placeholder="Enter code if you have one"
+            value={referralModalValue}
+            onChangeText={setReferralModalValue}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View style={styles.referralModalActions}>
+            <TouchableOpacity
+              style={styles.referralModalButton}
+              onPress={confirmReferralCode}
+            >
+              <Text style={styles.referralModalButtonText}>Confirm</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.referralModalButton, styles.referralModalButtonSecondary]}
+              onPress={closeReferralModal}
+            >
+              <Text style={styles.referralModalButtonTextSecondary}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  )
 
   const renderTermsModal = () => {
     return (
@@ -987,7 +1050,11 @@ const RegisterEmailScreen = () => {
           behavior={userPlanformOS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              paddingBottom: Math.max(24, insets.bottom),
+            }}
             keyboardShouldPersistTaps="always"
           >
             <AuthScreensBackArrowLink routeName="registerOrLogin" />
@@ -995,6 +1062,7 @@ const RegisterEmailScreen = () => {
           </ScrollView>
         </KeyboardAvoidingView>
         {renderTermsModal()}
+        {renderReferralModal()}
       </>
     )
   }
@@ -1007,7 +1075,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#232936',
     width: '100%',
     flex: 1,
-    marginTop: -100,
   },
   bedAndroid: {
     backgroundColor: '#232936',
@@ -1029,11 +1096,38 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     alignItems: 'center',
   },
+  affiliateCodeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   affiliateLabel: {
     color: '#F9B321',
     fontSize: 12,
     textAlign: 'center',
     marginBottom: 4,
+  },
+  affiliateLinkButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  affiliateLinkText: {
+    color: '#F9B321',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  affiliateAddButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#F9B321',
+    borderRadius: 7,
+  },
+  affiliateAddButtonText: {
+    color: '#F9B321',
+    fontSize: 14,
   },
   validateText: {
     color: '#F9B321',
@@ -1232,6 +1326,64 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  referralModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  referralModalContent: {
+    backgroundColor: '#232936',
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 340,
+    padding: 20,
+  },
+  referralModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  referralModalTitle: {
+    color: '#F9B321',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  referralModalInput: {
+    backgroundColor: '#fff',
+    height: 50,
+    borderRadius: 7,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  referralModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'flex-end',
+  },
+  referralModalButton: {
+    backgroundColor: '#278acd',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 7,
+  },
+  referralModalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  referralModalButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#7ac6fa',
+  },
+  referralModalButtonTextSecondary: {
+    color: '#7ac6fa',
+    fontSize: 16,
   },
 })
 
